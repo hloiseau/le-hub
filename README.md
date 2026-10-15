@@ -9,6 +9,10 @@ Portail Nuxt pour centraliser services, demandes, bibliothèque et performances 
 - [Contribuer](CONTRIBUTING.md)
 - [Projet complémentaire : le-concierge](https://github.com/hloiseau/le-concierge)
 
+## Déployer sur TrueNAS
+
+Les deux premières versions sont fusionnées ; les images sont disponibles sur GHCR. Utiliser le [guide TrueNAS](https://github.com/hloiseau/le-concierge/blob/main/docs/truenas-quickstart.md) : YAML Hub + API ou version complète avec bot, Caddy et vérification. Le [tutoriel Discord](https://github.com/hloiseau/le-concierge/blob/main/docs/discord-quickstart.md) couvre connexion du Hub et commandes. Le tag `edge` suit main ; les YAML proposent des tags SHA figés.
+
 ## Démarrer
 
 `npm ci`, puis `npm run dev` avec le backend local. Voir le [guide de développement et validation](docs/development.md) pour les variables, tests, contrat API et images Docker. Le mode `NUXT_PUBLIC_DEMO=true` affiche des données fictives explicitement signalées.
