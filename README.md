@@ -9,9 +9,11 @@ Portail Nuxt pour centraliser services, demandes, bibliothèque et performances 
 - [Contribuer](CONTRIBUTING.md)
 - [Projet complémentaire : le-concierge](https://github.com/hloiseau/le-concierge)
 
+Le portail est fermé avant connexion Plex : seuls les comptes ayant accès au serveur peuvent entrer. Les liens et les données restent protégés côté API.
+
 ## Déployer sur TrueNAS
 
-Les deux premières versions sont fusionnées ; les images sont disponibles sur GHCR. Utiliser le [guide TrueNAS](https://github.com/hloiseau/le-concierge/blob/main/docs/truenas-quickstart.md) : YAML Hub + API ou version complète avec bot, Caddy et vérification. Le [tutoriel Discord](https://github.com/hloiseau/le-concierge/blob/main/docs/discord-quickstart.md) couvre connexion du Hub et commandes. Le tag `edge` suit main ; les YAML proposent des tags SHA figés.
+Les deux premières versions sont fusionnées ; les images sont disponibles sur GHCR. Utiliser le [guide TrueNAS](https://github.com/hloiseau/le-concierge/blob/main/docs/truenas-quickstart.md) : YAML Hub + API ou version complète avec bot, Caddy et vérification. Le [tutoriel Discord](https://github.com/hloiseau/le-concierge/blob/main/docs/discord-quickstart.md) couvre la liaison facultative et les commandes du bot. Le tag `edge` suit main ; les YAML utilisent `edge`.
 
 ## Démarrer
 
@@ -22,7 +24,7 @@ L’entrée « À voir avant leur départ » prépare la nouvelle priorité Main
 ## Périmètre
 
 - V0 : accès Plex, Seerr, Downloadarr, Torrent Watch, Shelfmark et Grimmory, nouveautés, FAQ et guides.
-- V1 : connexion Discord, comptes liés, demandes et préférences personnelles.
+- V1 : connexion Plex obligatoire, liaison Discord facultative, comptes liés, demandes et préférences personnelles.
 - V2 : catalogue livres/mangas, demandes Shelfmark, imports, collections et accès Kobo selon capacités.
 - V3 : performances CPU, RAM, GPU, stockage, réseau et activité Plex, en direct et sur historique.
 - V4 : forums, votes et roadmap publique.

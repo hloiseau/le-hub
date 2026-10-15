@@ -1,17 +1,25 @@
 <script setup lang="ts">
-const { demo, session, error, refresh, logout } = useHub()
+const { demo, ready, session, error, refresh, logout } = useHub()
 const config = useRuntimeConfig()
 const menu = ref(false)
 const route = useRoute()
 const actionError = ref('')
 watch(() => route.path, () => { menu.value = false })
-onMounted(refresh)
+let recheck: ReturnType<typeof setInterval> | undefined
+function checkOnFocus() { if (document.visibilityState === 'visible') void refresh() }
+onMounted(() => {
+  void refresh()
+  recheck = setInterval(() => void refresh(), 60_000)
+  document.addEventListener('visibilitychange', checkOnFocus)
+})
+onBeforeUnmount(() => { clearInterval(recheck); document.removeEventListener('visibilitychange', checkOnFocus) })
 async function signOut() { try { await logout() } catch { actionError.value = 'La déconnexion a échoué. Réessayez.' } }
 const nav = [{ path: '/', icon: 'home', text: 'Accueil' }, { path: '/demandes', icon: 'requests', text: 'Mes demandes' }, { path: '/bibliotheque', icon: 'book', text: 'Bibliothèque' }, { path: '/serveur', icon: 'server', text: 'Le serveur' }]
 </script>
 <template>
   <a class="skip-link" href="#main">Aller au contenu</a>
-  <div class="app-shell">
+  <PlexGate v-if="!ready || !session.user || !session.plexConnected" />
+  <div v-else class="app-shell">
     <header class="mobile-bar"><NuxtLink to="/" class="brand">le hub<span>.</span></NuxtLink><button class="icon-button" :aria-expanded="menu" aria-controls="sidebar" :aria-label="menu ? 'Fermer la navigation' : 'Ouvrir la navigation'" @click="menu = !menu"><HubIcon :name="menu ? 'close' : 'menu'" /></button></header>
     <button v-if="menu" class="scrim" aria-label="Fermer la navigation" @click="menu = false" />
     <aside id="sidebar" class="sidebar" :class="{ open: menu }">

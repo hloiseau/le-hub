@@ -39,7 +39,7 @@ NUXT_API_BASE=http://api:8080 HOST=0.0.0.0 PORT=3000 node .output/server/index.m
 
 Le Dockerfile produit une image non-root contenant seulement `.output`. La CI construit les images sur PR ; elle publie sur GHCR après les validations, uniquement sur main ou sur un tag. `edge` suit main, les tags `sha-<commit>` figent une construction. Ne pas supposer une image présente avant réussite du workflow correspondant.
 
-Les exemples Compose, TrueNAS et Caddy communs sont dans [le guide de déploiement du Concierge](https://github.com/hloiseau/le-concierge/blob/main/docs/deployment.md). L'API interne du bot n'est jamais relayée par le Hub. Le proxy conserve cookies, origine et redirections HTTP ; il ne doit pas suivre le redirect de connexion Discord côté serveur.
+Les exemples Compose, TrueNAS et Caddy communs sont dans [le guide de déploiement du Concierge](https://github.com/hloiseau/le-concierge/blob/main/docs/deployment.md). L'API interne du bot n'est jamais relayée par le Hub. Le proxy conserve cookies, origine et redirections HTTP ; il ne doit pas suivre le redirect de connexion Plex côté serveur.
 
 ## Dépendances — constat du 15 octobre 2026
 
@@ -50,3 +50,5 @@ Ces packages ne figurent pas dans le manifeste des dépendances de la sortie sta
 ## État réel des fonctions
 
 Accueil, liens, connexion, parcours Plex, demandes, préférences et aide sont implémentés. Les derniers ajouts utilisent des cartes graphiques sans récupération d'affiches privées. Les écrans livres, monitoring et retraits expliquent leur état à venir : ils n'affichent aucun résultat simulé comme une donnée réelle. Aucune notification proactive n'est active.
+
+Le portail n’affiche aucune page avant une session Plex valide, y compris en accès direct à une URL. La liaison Discord est facultative dans Mon compte. Le mode démo n’accorde aucun accès aux données réelles et doit rester désactivé sur le NAS.
