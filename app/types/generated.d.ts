@@ -200,6 +200,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/departures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Current Plex user only. Recorded viewing history and season/show parents within 30 days. Checks active rules, exclusions and current per-item Plex access. Missing history and whole-season completion remain unknown. No query parameters or automatic reminders. */
+        get: operations["getDepartures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -248,6 +265,8 @@ export interface components {
             notifications: boolean;
             books: boolean;
             monitoring: boolean;
+            /** @description Personal recorded viewing history; automatic reminders remain separate. */
+            departures?: boolean;
         };
         Media: {
             id: string;
@@ -300,6 +319,27 @@ export interface components {
         };
         Success: {
             ok: boolean;
+        };
+        Departure: {
+            id: string;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "episode" | "season" | "show";
+            /** @enum {string} */
+            watch: "in_progress" | "completed" | "unknown";
+            /** Format: date-time */
+            estimatedAt: string;
+            /** Format: uri */
+            url: string;
+        };
+        Departures: {
+            items: components["schemas"]["Departure"][];
+            /** @enum {string} */
+            scope: "recorded_history";
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
     };
     responses: never;
@@ -696,6 +736,35 @@ export interface operations {
                 content?: never;
             };
             /** @description Authentication error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDepartures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Departures"];
+                };
+            };
+            /** @description Error with stable code and French message */
             default: {
                 headers: {
                     [name: string]: unknown;

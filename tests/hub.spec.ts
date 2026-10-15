@@ -98,8 +98,8 @@ test('Seerr association can be retried after signing in with Plex', async ({ pag
 test('all portal routes stay behind the Plex gate without private requests', async ({ page }) => {
   await api(page)
   const privateRequests: string[] = []
-  page.on('request', r => { if (/\/api\/v1\/(services|requests|recent|preferences)/.test(r.url())) privateRequests.push(r.url()) })
-  for (const route of ['/', '/demandes', '/bibliotheque', '/serveur', '/compte', '/aide']) {
+  page.on('request', r => { if (/\/api\/v1\/(services|requests|recent|preferences|departures)/.test(r.url())) privateRequests.push(r.url()) })
+  for (const route of ['/', '/demandes', '/bibliotheque', '/serveur', '/compte', '/aide', '/avant-le-depart']) {
     await page.goto(route)
     await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
     await expect(page.getByRole('navigation')).toHaveCount(0)
