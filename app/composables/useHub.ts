@@ -12,34 +12,47 @@ export function useHub() {
   const config = useRuntimeConfig()
   const demo = computed(() => String(config.public.demo) === 'true')
   const session = useState<Session>('session', () => ({ user: null }))
-  const services = useState<Service[]>('services', () => defaults)
+  const services = useState<Service[]>('services', () => [])
   const capabilities = useState<Capabilities | null>('capabilities', () => null)
   const error = useState<string>('hub-error', () => '')
   const ready = useState('hub-ready', () => false)
+  const refreshing = useState('hub-refreshing', () => false)
+  const generation = useState('hub-session-generation', () => 0)
   async function refresh() {
+    if (refreshing.value) return
+    refreshing.value = true
+    const current = generation.value
     if (demo.value) {
       session.value = { user: { discordId: 'demo', name: 'Alex', plexId: 'demo', seerrId: 1, notifications: false }, plexConnected: true }
       capabilities.value = { version: 'démo', discordLogin: false, plexLink: false, requests: true, recent: true, subscriptions: false, notifications: false, books: false, monitoring: false }
       services.value = defaults
       ready.value = true
+      refreshing.value = false
       return
     }
     try {
-      const [s, links, caps] = await Promise.all([
+      const [s, caps] = await Promise.all([
         $fetch<Session>('/api/v1/session'),
-        $fetch<{ items: Service[] }>('/api/v1/services'),
         $fetch<Capabilities>('/api/v1/capabilities'),
       ])
-      session.value = s; services.value = links.items; capabilities.value = caps; error.value = ''
+      if (current !== generation.value) return
+      capabilities.value = caps; error.value = ''
+      // Fetch private configuration only once Plex has opened the gate.
+      if (!s.user || !s.plexConnected) { session.value = { user: null }; services.value = []; return }
+      const links = await $fetch<{ items: Service[] }>('/api/v1/services')
+      if (current !== generation.value) return
+      session.value = s; services.value = links.items
     } catch {
-      error.value = 'Le Hub ne parvient pas à joindre son service. Réessayez dans un instant.'
-      session.value = { user: null }
-      capabilities.value = null
-    } finally { ready.value = true }
+      if (current !== generation.value) return
+      error.value = 'Le Hub ne parvient pas à vérifier votre accès. Réessayez dans un instant.'
+      session.value = { user: null }; services.value = []
+    } finally { ready.value = true; refreshing.value = false }
   }
+
   async function logout() {
     if (!demo.value) await $fetch('/api/v1/auth/logout', { method: 'POST' })
-    session.value = { user: null }
+    generation.value++
+    session.value = { user: null }; services.value = []; error.value = ''
     await navigateTo('/')
   }
   return { demo, session, services, capabilities, error, ready, refresh, logout }

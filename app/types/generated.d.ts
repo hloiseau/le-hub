@@ -109,7 +109,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["startPlexLink"];
+        /** @description Anonymous Plex PIN flow; exact Origin required. The pending PIN is bound to a dedicated HttpOnly browser cookie. A session is issued only after Plex verifies access to the configured server. */
+        post: operations["startPlexLogin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -125,7 +126,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["pollPlexLink"];
+        /** @description Anonymous Plex PIN flow; exact Origin required. The pending PIN is bound to a dedicated HttpOnly browser cookie. A session is issued only after Plex verifies access to the configured server. */
+        post: operations["pollPlexLogin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -171,6 +173,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Link Discord to the current verified Plex account. The OAuth attempt is bound to the initiating live session. */
         get: operations["startDiscord"];
         put?: never;
         post?: never;
@@ -187,6 +190,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Consume the one-time state and its browser cookie, verify the initiating Plex session is still valid, link the Discord identity, rotate the session cookie. Does not grant Hub access on its own. */
         get: operations["callbackDiscord"];
         put?: never;
         post?: never;
@@ -207,9 +211,10 @@ export interface components {
             };
         };
         User: {
-            discordId: string;
+            /** @description Optional Discord identity, linked after Plex login. */
+            discordId?: string;
             name: string;
-            plexId?: string;
+            plexId: string;
             seerrId?: number;
             notifications: boolean;
         };
@@ -233,7 +238,9 @@ export interface components {
         };
         Capabilities: {
             version: string;
+            /** @description Optional Discord account linking is configured; this does not authenticate access to the Hub. */
             discordLogin: boolean;
+            /** @description Plex sign-in is configured and required to enter the Hub. */
             plexLink: boolean;
             requests: boolean;
             recent: boolean;
@@ -517,7 +524,7 @@ export interface operations {
             };
         };
     };
-    startPlexLink: {
+    startPlexLogin: {
         parameters: {
             query?: never;
             header: {
@@ -549,7 +556,7 @@ export interface operations {
             };
         };
     };
-    pollPlexLink: {
+    pollPlexLogin: {
         parameters: {
             query?: never;
             header: {

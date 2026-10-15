@@ -18,7 +18,7 @@ async function loadRecent() {
   } catch (e) { if (request === revision) message.value = apiMessage(e) }
   finally { if (request === revision) loading.value = false }
 }
-watch([ready, () => session.value.user?.discordId, () => session.value.plexConnected], loadRecent, { immediate: true })
+watch([ready, () => session.value.user?.plexId, () => session.value.plexConnected], loadRecent, { immediate: true })
 onBeforeUnmount(() => { revision++ })
 const kind = (type: string) => ({ movie: 'Film', show: 'Série', season: 'Saison', episode: 'Épisode' }[type] || 'Contenu')
 </script>
@@ -30,7 +30,7 @@ const kind = (type: string) => ({ movie: 'Film', show: 'Série', season: 'Saison
     <p v-if="loading" class="loading" role="status">On ouvre la bibliothèque…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="loadRecent">Réessayer</button></div>
     <div v-else-if="recent.length" class="media-grid"><component :is="item.url ? 'a' : 'div'" v-for="(item, index) in recent.slice(0, 8)" :key="item.id" class="media-card" :href="item.url || undefined" :target="item.url ? '_blank' : undefined" :rel="item.url ? 'noopener noreferrer' : undefined"><div class="media-cover" :class="`cover-${index % 4}`"><span class="media-kind">{{ kind(item.type) }}</span><div class="cover-decoration" /><HubIcon name="play" class="cover-play" /><span class="cover-title">{{ item.title }}</span></div><h3>{{ item.title }}</h3><p>{{ item.subtitle || (item.year ? `${kind(item.type)} · ${item.year}` : kind(item.type)) }}</p></component></div>
-    <EmptyState v-else-if="!session.user || !session.plexConnected" icon="play" title="Votre bibliothèque vous attend" text="Connectez-vous et liez votre compte Plex pour retrouver les ajouts auxquels vous avez accès."><NuxtLink to="/compte" class="button secondary">Ouvrir mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
+    <EmptyState v-else-if="!session.user || !session.plexConnected" icon="play" title="Votre bibliothèque vous attend" text="Connectez-vous avec Plex pour retrouver les ajouts auxquels vous avez accès."><NuxtLink to="/compte" class="button secondary">Ouvrir mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
     <EmptyState v-else title="Pas de nouveauté pour le moment" :text="capabilities?.recent ? 'Les prochains ajouts apparaîtront ici.' : 'La bibliothèque Plex reste à connecter.'" />
   </section>
   <div class="bottom-grid"><NuxtLink to="/avant-le-depart" class="feature-tile departure-tile"><span class="tile-icon"><HubIcon name="bell" /></span><div><span class="tag">PROCHAINE PRIORITÉ</span><h3>À voir avant leur départ</h3><p>Être prévenu avant qu’un contenu non terminé quitte le serveur.</p></div><HubIcon name="arrow" /></NuxtLink><NuxtLink to="/aide" class="feature-tile"><span class="tile-icon"><HubIcon name="help" /></span><div><span class="eyebrow">UN PEU PERDU ?</span><h3>On vous guide</h3><p>Les services, les comptes et les bonnes habitudes.</p></div><HubIcon name="arrow" /></NuxtLink></div>

@@ -21,20 +21,19 @@ async function api(page: Page, signedIn = false) {
     else if (path.endsWith('/auth/logout')) { signedIn = false; data = { ok: true } }
     await route.fulfill({ json: data })
   })
+  return { signIn: () => { signedIn = true }, signOut: () => { signedIn = false } }
 }
-test('anonymous home, filters and account guidance', async ({ page }, testInfo) => {
-  await api(page)
+test('authenticated home and service filters', async ({ page }, testInfo) => {
+  await api(page, true)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'On regarde quoi ?' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Votre bibliothèque vous attend' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Interstellar' })).toBeVisible()
   await page.getByRole('button', { name: 'Lire', exact: true }).click()
   await expect(page.locator('.services-grid .service-card')).toHaveCount(2)
   await expect(page.locator('.services-grid')).toContainText('Grimmory')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: testInfo.outputPath('home.png'), fullPage: true })
-  await page.getByRole('link', { name: 'Ouvrir mon compte' }).click()
-  await expect(page.getByRole('link', { name: 'Se connecter avec Discord' })).toHaveAttribute('href', '/api/v1/auth/discord/start')
 })
 test('personal requests render safely and filter by status', async ({ page }, testInfo) => {
   await api(page, true)
@@ -93,4 +92,67 @@ test('Seerr association can be retried after signing in with Plex', async ({ pag
   await expect(page.getByRole('status')).toContainText('associé automatiquement')
   await expect(page.getByRole('button', { name: 'Actualiser l’association' })).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+})
+
+
+test('all portal routes stay behind the Plex gate without private requests', async ({ page }) => {
+  await api(page)
+  const privateRequests: string[] = []
+  page.on('request', r => { if (/\/api\/v1\/(services|requests|recent|preferences)/.test(r.url())) privateRequests.push(r.url()) })
+  for (const route of ['/', '/demandes', '/bibliotheque', '/serveur', '/compte', '/aide']) {
+    await page.goto(route)
+    await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
+    await expect(page.getByRole('navigation')).toHaveCount(0)
+    await expect(page.locator('.services-grid')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Lier Discord' })).toHaveCount(0)
+  }
+  expect(privateRequests).toEqual([])
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+})
+
+test('Plex login opens the requested page without Discord', async ({ page }) => {
+  await api(page)
+  let connected = false
+  await page.route('**/api/v1/session', route => route.fulfill({ json: connected ? { user: { name: 'Alice Plex', plexId: '77', notifications: false }, plexConnected: true } : { user: null } }))
+  await page.route('**/api/v1/auth/plex/start', route => route.fulfill({ json: { url: 'https://app.plex.tv/auth#?clientID=test&code=long-pin-code', expiresIn: 300 } }))
+  await page.route('**/api/v1/auth/plex/poll', route => { connected = true; return route.fulfill({ json: { connected: true } }) })
+  await page.goto('/compte')
+  await page.getByRole('button', { name: 'Se connecter avec Plex' }).click()
+  await expect(page.getByRole('link', { name: 'Continuer sur Plex' })).toHaveAttribute('href', /^https:\/\/app\.plex\.tv\/auth#/)
+  await expect(page.getByRole('heading', { name: 'Vos comptes liés' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Lier Discord' })).toBeVisible()
+  await expect(page.getByText('Facultatif · Pour utiliser les commandes du bot')).toBeVisible()
+  await expect(page.locator('.login-screen')).toHaveCount(0)
+})
+
+test('denied Plex access keeps the gate closed with a useful message', async ({ page }) => {
+  await api(page)
+  await page.route('**/api/v1/auth/plex/start', route => route.fulfill({ json: { url: 'https://app.plex.tv/auth#?clientID=test', expiresIn: 300 } }))
+  await page.route('**/api/v1/auth/plex/poll', route => route.fulfill({ status: 403, json: { error: { code: 'plex_denied', message: 'Ce compte Plex n’a pas accès à ce serveur.' } } }))
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Se connecter avec Plex' }).click()
+  await expect(page.getByRole('alert')).toContainText('n’a pas accès')
+  await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
+  await expect(page.getByRole('navigation')).toHaveCount(0)
+})
+
+test('logout removes the portal and its cached service links', async ({ page }) => {
+  await api(page, true)
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Vos services' })).toBeVisible()
+  await page.getByRole('button', { name: 'Déconnexion' }).click()
+  await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
+  await expect(page.locator('.services-grid')).toHaveCount(0)
+  await page.goto('/demandes')
+  await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
+})
+
+test('expired sessions close the gate when returning to the tab', async ({ page }) => {
+  const auth = await api(page, true)
+  await page.goto('/demandes')
+  await expect(page.getByRole('heading', { name: 'Fallout' })).toBeVisible()
+  auth.signOut()
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
+  await expect(page.locator('.request-list')).toHaveCount(0)
 })
