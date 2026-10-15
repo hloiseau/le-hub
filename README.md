@@ -2,12 +2,18 @@
 
 Portail Nuxt pour centraliser services, demandes, bibliothèque et performances du serveur.
 
-**Statut : projet initialisé, développement à venir.** Le dépôt contient la documentation et le suivi de la roadmap. Il n’y a pas encore d’application exécutable, d’image publiée ni de déploiement prêt à installer.
+**Statut : première version exécutable en validation.** Les fondations et premiers parcours sont implémentés et testés localement. La configuration et la validation sur les services réels restent nécessaires ; aucune installation NAS n’a été effectuée.
 
 - [Roadmap et tickets](docs/roadmap.md)
 - [Architecture commune](docs/architecture.md)
 - [Contribuer](CONTRIBUTING.md)
 - [Projet complémentaire : le-concierge](https://github.com/hloiseau/le-concierge)
+
+## Démarrer
+
+`npm ci`, puis `npm run dev` avec le backend local. Voir le [guide de développement et validation](docs/development.md) pour les variables, tests, contrat API et images Docker. Le mode `NUXT_PUBLIC_DEMO=true` affiche des données fictives explicitement signalées.
+
+L’entrée « À voir avant leur départ » prépare la nouvelle priorité Maintainerr/Tautulli ; aucun rappel réel n’est encore envoyé.
 
 ## Périmètre
 
