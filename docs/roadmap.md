@@ -1,6 +1,6 @@
 # Roadmap — Le Hub
 
-15 issues ouvertes à l’initialisation. Le statut actuel est celui de chaque issue GitHub ; cette page organise le périmètre, sans échéances promises.
+16 issues de développement, dont la priorité « Avant leur départ ». Le statut actuel est celui de chaque issue GitHub ; cette page organise le périmètre, sans échéances promises.
 
 Les dépendances sont des liens vers les issues des deux dépôts. Les références Cxx/Hxx permettent de relier le découpage initial aux numéros GitHub.
 
@@ -39,3 +39,7 @@ Les dépendances sont des liens vers les issues des deux dépôts. Les référen
 | [#14 — Afficher une roadmap publique filtrée](https://github.com/hloiseau/le-hub/issues/14) | V4 | P2 | [H02](https://github.com/hloiseau/le-hub/issues/2), [C23](https://github.com/hloiseau/le-concierge/issues/23) |
 | [#15 — Intégrer Downloadarr, conversions et fichiers disponibles](https://github.com/hloiseau/le-hub/issues/15) | V5 | P1 | [H04](https://github.com/hloiseau/le-hub/issues/4), [C24](https://github.com/hloiseau/le-concierge/issues/24) |
 
+
+## Priorité ajoutée — phase 2
+
+- [#16 — À voir avant leur départ](https://github.com/hloiseau/le-hub/issues/16), avec [les sources backend #25](https://github.com/hloiseau/le-concierge/issues/25) et [la politique de rappel #26](https://github.com/hloiseau/le-concierge/issues/26). La page de présentation est implémentée ; les données et rappels réels ne sont pas encore connectés.

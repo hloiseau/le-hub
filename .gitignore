@@ -13,3 +13,6 @@ coverage/
 dist/
 bin/
 .DS_Store
+
+test-results/
+playwright-report/
