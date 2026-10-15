@@ -1,0 +1,182 @@
+[
+  {
+    "key": "H01",
+    "phase": 2,
+    "version": "V0",
+    "priority": "P0",
+    "depends_on": [
+      "C02"
+    ],
+    "issue_number": 1,
+    "url": "https://github.com/hloiseau/le-hub/issues/1"
+  },
+  {
+    "key": "H02",
+    "phase": 2,
+    "version": "V0",
+    "priority": "P0",
+    "depends_on": [
+      "H01"
+    ],
+    "issue_number": 2,
+    "url": "https://github.com/hloiseau/le-hub/issues/2"
+  },
+  {
+    "key": "H03",
+    "phase": 2,
+    "version": "V0",
+    "priority": "P1",
+    "depends_on": [
+      "H02",
+      "C06"
+    ],
+    "issue_number": 3,
+    "url": "https://github.com/hloiseau/le-hub/issues/3"
+  },
+  {
+    "key": "H04",
+    "phase": 2,
+    "version": "V1",
+    "priority": "P0",
+    "depends_on": [
+      "H01",
+      "C04"
+    ],
+    "issue_number": 4,
+    "url": "https://github.com/hloiseau/le-hub/issues/4"
+  },
+  {
+    "key": "H05",
+    "phase": 2,
+    "version": "V1",
+    "priority": "P0",
+    "depends_on": [
+      "H04",
+      "C05"
+    ],
+    "issue_number": 5,
+    "url": "https://github.com/hloiseau/le-hub/issues/5"
+  },
+  {
+    "key": "H06",
+    "phase": 2,
+    "version": "V1",
+    "priority": "P1",
+    "depends_on": [
+      "H04",
+      "C03"
+    ],
+    "issue_number": 6,
+    "url": "https://github.com/hloiseau/le-hub/issues/6"
+  },
+  {
+    "key": "H07",
+    "phase": 2,
+    "version": "V0 / V1",
+    "priority": "P0",
+    "depends_on": [
+      "H01",
+      "C10"
+    ],
+    "issue_number": 7,
+    "url": "https://github.com/hloiseau/le-hub/issues/7"
+  },
+  {
+    "key": "H08",
+    "phase": 3,
+    "version": "V2",
+    "priority": "P1",
+    "depends_on": [
+      "H04",
+      "C12"
+    ],
+    "issue_number": 8,
+    "url": "https://github.com/hloiseau/le-hub/issues/8"
+  },
+  {
+    "key": "H09",
+    "phase": 3,
+    "version": "V2",
+    "priority": "P1",
+    "depends_on": [
+      "H08",
+      "C13",
+      "C14"
+    ],
+    "issue_number": 9,
+    "url": "https://github.com/hloiseau/le-hub/issues/9"
+  },
+  {
+    "key": "H10",
+    "phase": 3,
+    "version": "V2",
+    "priority": "P2",
+    "depends_on": [
+      "H08",
+      "C11",
+      "C15"
+    ],
+    "issue_number": 10,
+    "url": "https://github.com/hloiseau/le-hub/issues/10"
+  },
+  {
+    "key": "H11",
+    "phase": 4,
+    "version": "V3",
+    "priority": "P1",
+    "depends_on": [
+      "H04",
+      "C17"
+    ],
+    "issue_number": 11,
+    "url": "https://github.com/hloiseau/le-hub/issues/11"
+  },
+  {
+    "key": "H12",
+    "phase": 4,
+    "version": "V3",
+    "priority": "P1",
+    "depends_on": [
+      "H11",
+      "C18"
+    ],
+    "issue_number": 12,
+    "url": "https://github.com/hloiseau/le-hub/issues/12"
+  },
+  {
+    "key": "H13",
+    "phase": 5,
+    "version": "V4",
+    "priority": "P2",
+    "depends_on": [
+      "H04",
+      "C23"
+    ],
+    "issue_number": 13,
+    "url": "https://github.com/hloiseau/le-hub/issues/13"
+  },
+  {
+    "key": "H14",
+    "phase": 5,
+    "version": "V4",
+    "priority": "P2",
+    "depends_on": [
+      "H02",
+      "C23"
+    ],
+    "issue_number": 14,
+    "url": "https://github.com/hloiseau/le-hub/issues/14"
+  },
+  {
+    "key": "H15",
+    "phase": 5,
+    "version": "V5",
+    "priority": "P1",
+    "depends_on": [
+      "H04",
+      "C24"
+    ],
+    "issue_number": 15,
+    "url": "https://github.com/hloiseau/le-hub/issues/15"
+  }
+]
