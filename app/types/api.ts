@@ -7,4 +7,5 @@ export type Media = components['schemas']['Media']
 export type MediaRequest = components['schemas']['MediaRequest']
 export type RequestStatus = MediaRequest['status']
 export type RequestPage = components['schemas']['RequestPage']
+export type Departures = components['schemas']['Departures']
 export const statusLabels: Record<RequestStatus, string> = { pending: 'En attente', approved: 'Approuvée', declined: 'Refusée', processing: 'En cours', partial: 'Disponibilité partielle', available: 'Disponible', unknown: 'État inconnu' }

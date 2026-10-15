@@ -19,7 +19,7 @@ Les deux premières versions sont fusionnées ; les images sont disponibles sur 
 
 `npm ci`, puis `npm run dev` avec le backend local. Voir le [guide de développement et validation](docs/development.md) pour les variables, tests, contrat API et images Docker. Le mode `NUXT_PUBLIC_DEMO=true` affiche des données fictives explicitement signalées.
 
-L’entrée « À voir avant leur départ » prépare la nouvelle priorité Maintainerr/Tautulli ; aucun rappel réel n’est encore envoyé.
+La page « Avant leur départ » et le bloc d’accueil affichent les départs estimés des lectures enregistrées, lorsque le backend expose la capacité `departures`. Les accès Plex, règles Maintainerr et exclusions sont vérifiés ; les données périmées sont retirées. Les demandes jamais commencées, suivis et rappels automatiques restent à réaliser. L’état d’une saison entière reste explicitement incertain. Voir le [périmètre backend](https://github.com/hloiseau/le-concierge/blob/feat/personal-departures/docs/removal-reminders.md).
 
 ## Périmètre
 
