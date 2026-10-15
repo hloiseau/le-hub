@@ -77,3 +77,20 @@ test('navigation and upcoming metrics on small screens', async ({ page, isMobile
   await expect(page.getByRole('heading', { name: 'Les métriques ne sont pas encore connectées' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
 })
+
+test('Seerr association can be retried after signing in with Plex', async ({ page }) => {
+  await api(page, true)
+  let linked = false
+  await page.route('**/api/v1/session', route => route.fulfill({ json: {
+    user: { discordId: '12345', name: 'Alex', plexId: '1', ...(linked ? { seerrId: 42 } : {}) }, plexConnected: true,
+  } }))
+  await page.goto('/compte')
+  await expect(page.getByRole('link', { name: 'Ouvrir Seerr' })).toHaveAttribute('href', 'https://seerr.example.com')
+  await page.getByRole('button', { name: 'Actualiser l’association' }).click()
+  await expect(page.getByRole('status')).toContainText('Association non confirmée')
+  linked = true
+  await page.getByRole('button', { name: 'Actualiser l’association' }).click()
+  await expect(page.getByRole('status')).toContainText('associé automatiquement')
+  await expect(page.getByRole('button', { name: 'Actualiser l’association' })).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+})
