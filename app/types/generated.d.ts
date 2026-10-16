@@ -568,6 +568,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/downloads/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloadarrLink"];
+        put?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        post: operations["startDownloadarrLogin"];
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        delete: operations["unlinkDownloadarr"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/link/poll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        post: operations["pollDownloadarrLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloads"];
+        put?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        post: operations["createDownload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloadOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        delete: operations["cancelDownload"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Native same-origin POST with an empty body. Owner/session revalidated before bytes. No Range or URL tickets. Streaming uses bounded buffers and aborts at logout, revocation, expiry or disconnect. A lost/expired job is never recreated automatically. */
+        post: operations["downloadPreparedFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -631,6 +733,7 @@ export interface components {
             bookCollections?: boolean;
             recentBooks?: boolean;
             bookRequestTracking?: boolean;
+            downloads?: boolean;
         };
         Media: {
             id: string;
@@ -1252,6 +1355,74 @@ export interface components {
             hasMore: boolean;
             /** Format: date-time */
             checkedAt: string;
+        };
+        DownloadarrLinkStatus: {
+            linked: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            qualityOptions?: ("720p-2" | "720p-4" | "1080p-8")[];
+        };
+        DownloadarrLogin: {
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        DownloadStreamOption: {
+            id: string;
+            label: string;
+        };
+        DownloadOptions: {
+            audio: components["schemas"]["DownloadStreamOption"][];
+            subtitle: components["schemas"]["DownloadStreamOption"][];
+            season: boolean;
+            fileCount: number;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "episode" | "season";
+        };
+        DownloadInput: {
+            ratingKey: string;
+            /** @enum {string} */
+            quality: "720p-2" | "720p-4" | "1080p-8";
+            season?: boolean;
+            partKey?: string;
+            audio?: string;
+            subtitle?: string;
+            /** @enum {boolean} */
+            confirmed: true;
+        };
+        DownloadJob: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            ratingKey: string;
+            /** Format: date-time */
+            createdAt: string;
+            season: boolean;
+            /** @enum {string} */
+            quality: "720p-2" | "720p-4" | "1080p-8";
+            filename: string;
+            /** @enum {string} */
+            state: "preparing" | "ready" | "sending" | "error";
+            readyCount: number;
+            fileCount: number;
+            /** @enum {string} */
+            stage: "deciding" | "waiting" | "processing" | "finalizing" | "ready";
+            progress: number | null;
+            error?: string;
+            /** Format: date-time */
+            expiresAt: string;
+            reused?: boolean;
+            audioLabel: string;
+            subtitleLabel: string;
+        };
+        DownloadJobs: {
+            items: components["schemas"]["DownloadJob"][];
+            /** Format: date-time */
+            checkedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
     };
     responses: never;
@@ -2602,6 +2773,279 @@ export interface operations {
                 };
             };
             /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloadarrLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    startDownloadarrLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLogin"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unlinkDownloadarr: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    pollDownloadarrLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadJobs"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createDownload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DownloadInput"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadJob"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloadOptions: {
+        parameters: {
+            query: {
+                ratingKey: string;
+                quality: "720p-2" | "720p-4" | "1080p-8";
+                season?: boolean;
+                partKey?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadOptions"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    cancelDownload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    downloadPreparedFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified prepared attachment. No-store; no secrets or upstream URLs in headers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": string;
+                    "application/zip": string;
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
             default: {
                 headers: {
                     [name: string]: unknown;

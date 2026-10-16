@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Media, RecentPage } from '~/types/api'
+import { downloadRoute } from '~/utils/downloads'
 const { session, services, demo, ready, capabilities, refresh } = useHub()
 const filter = ref('all')
 const recent = ref<Media[]>([])
@@ -53,7 +54,7 @@ const freshness = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyl
   <section class="section-block"><div class="section-heading"><div><span class="eyebrow">FRAÎCHEMENT ARRIVÉS</span><h2>Les derniers ajouts</h2></div><span class="subtle-caption">{{ demo ? 'Exemples de contenus' : 'Votre bibliothèque Plex' }}</span></div>
     <p v-if="loading && !recent.length" class="loading" role="status">On ouvre la bibliothèque…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="loadRecent()">Réessayer</button></div>
-    <div v-else-if="recent.length" class="media-grid"><component :is="item.url ? 'a' : 'div'" v-for="(item, index) in recent" :key="item.id" class="media-card" :href="item.url || undefined" :target="item.url ? '_blank' : undefined" :rel="item.url ? 'noopener noreferrer' : undefined"><div class="media-cover" :class="`cover-${index % 4}`"><span class="media-kind">{{ kind(item.type) }}</span><div class="cover-decoration" /><HubIcon name="play" class="cover-play" /><span class="cover-title">{{ item.title }}</span></div><h3>{{ item.title }}</h3><p>{{ item.subtitle || (item.year ? `${kind(item.type)} · ${item.year}` : kind(item.type)) }}</p><p>Ajouté le <time :datetime="item.addedAt">{{ date(item.addedAt) }}</time></p></component></div>
+    <div v-else-if="recent.length" class="media-grid"><article v-for="(item, index) in recent" :key="item.id" class="media-card"><component :is="item.url ? 'a' : 'div'" class="media-open" :href="item.url || undefined" :target="item.url ? '_blank' : undefined" :rel="item.url ? 'noopener noreferrer' : undefined"><div class="media-cover" :class="`cover-${index % 4}`"><span class="media-kind">{{ kind(item.type) }}</span><div class="cover-decoration" /><HubIcon name="play" class="cover-play" /><span class="cover-title">{{ item.title }}</span></div><h3>{{ item.title }}</h3><p>{{ item.subtitle || (item.year ? `${kind(item.type)} · ${item.year}` : kind(item.type)) }}</p><p>Ajouté le <time :datetime="item.addedAt">{{ date(item.addedAt) }}</time></p></component><NuxtLink v-if="capabilities?.downloads && !demo && downloadRoute(item)" :to="downloadRoute(item)!" class="text-button media-download" :aria-label="`Préparer ${item.title} pour un téléchargement`">Préparer un téléchargement <HubIcon name="download" /></NuxtLink></article></div>
     <EmptyState v-else-if="!session.user || !session.plexConnected" icon="play" title="Votre bibliothèque vous attend" text="Connectez-vous avec Plex pour retrouver les ajouts auxquels vous avez accès."><NuxtLink to="/compte" class="button secondary">Ouvrir mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
     <EmptyState v-else title="Pas de nouveauté pour le moment" :text="capabilities?.recent ? 'Les prochains ajouts apparaîtront ici.' : 'La bibliothèque Plex reste à connecter.'" />
     <div v-if="nextOffset !== null && !message" class="recent-pagination"><button class="button secondary" :disabled="loading" @click="nextOffset !== null && loadRecent(nextOffset)">{{ loading ? 'Chargement…' : 'Voir les ajouts suivants' }}</button></div>
@@ -65,5 +66,5 @@ const freshness = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyl
   </div>
 </template>
 <style scoped>
-.recent-pagination{margin-top:24px}.recent-freshness{font-size:12px;line-height:1.7;margin-top:18px}
+.recent-pagination{margin-top:24px}.recent-freshness{font-size:12px;line-height:1.7;margin-top:18px}.media-open{display:block}.media-open>p{font-size:10px;color:var(--muted);margin-top:3px}.media-open[href]:hover .media-cover{filter:brightness(1.12)}.media-download{font-size:11px;margin-top:10px;line-height:1.6}
 </style>
