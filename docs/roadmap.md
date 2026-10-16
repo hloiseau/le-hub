@@ -8,7 +8,7 @@ Les dépendances sont des liens vers les issues des deux dépôts. Les référen
 
 La [PR Hub #29](https://github.com/hloiseau/le-hub/pull/29) et la [PR Concierge #40](https://github.com/hloiseau/le-concierge/pull/40) raccordent demandes, nouveautés, rappels, suivis, livres/collections, suivi Shelfmark, performances et communauté. Les tests navigateur couvrent ordinateur et mobile avec sources simulées. Le [suivi détaillé backend](https://github.com/hloiseau/le-concierge/blob/feat/private-reminders-and-recent/docs/roadmap.md) distingue code livré et recette réelle.
 
-Les imports Grimmory restent explicitement non vérifiés sans corrélation amont ; aucune liste de tomes manquants ou de nouvelles sorties n’est inventée. Le statut Kobo n’est pas simulé. Downloadarr attend la publication de son contrat personnel et la vérification de l’image installée. Les métriques et publications communautaires nécessitent une configuration explicite ; les pages effacent les données expirées, révoquées et les réponses tardives après déconnexion.
+Les imports Grimmory restent explicitement non vérifiés sans corrélation amont ; aucune liste de tomes manquants ou de nouvelles sorties n’est inventée. Le statut Kobo n’est pas simulé. Le contrat personnel Downloadarr est publié dans la [PR brouillon amont #1](https://github.com/hloiseau/LibraryDownloadarr/pull/1) ; sa fusion, son déploiement et la vérification de l’image installée restent nécessaires avant le raccordement. Les métriques et publications communautaires nécessitent une configuration explicite ; les pages effacent les données expirées, révoquées et les réponses tardives après déconnexion.
 
 ## Phase 2 — Portail V0 / V1
 
