@@ -251,6 +251,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSubscriptions"];
+        put?: never;
+        /** @description Origin must match PUBLIC_ORIGIN. Only the authenticated owner can follow; at most 100 follows. */
+        post: operations["postSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Owner only; matching Origin required. */
+        delete: operations["deleteSubscription"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/extension-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The owner’s 100 latest requests, retained for 90 days. */
+        get: operations["getExtensionRequests"];
+        put?: never;
+        /** @description Fresh authorized departure required, matching Origin. One request per owner/action/deadline, at most ten pending or created within 24h. Creates an administrative request without changing Maintainerr. */
+        post: operations["postExtensionRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extension-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Configured administrator only; 100 oldest pending requests, including requester display name. */
+        get: operations["getAdminExtensionRequests"];
+        /** @description Configured administrator only, matching Origin. Records manual handling or refusal; does not modify Maintainerr. */
+        put: operations["reviewExtensionRequest"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -296,12 +366,16 @@ export interface components {
             requests: boolean;
             recent: boolean;
             subscriptions: boolean;
-            /** @description Private inbox reminders are configured. Discord DM delivery is not available. */
+            /** @description Private removal reminder inbox is configured. Optional Discord delivery has its separate discordDMs capability and explicit consent. */
             notifications: boolean;
             books: boolean;
             monitoring: boolean;
             /** @description Personal recorded viewing history; automatic reminders remain separate. */
             departures: boolean;
+            /** @description Explicit opt-in Discord removal reminders are configured. */
+            discordDMs?: boolean;
+            /** @description Fresh departure requests can be submitted to configured administrators. */
+            extensionRequests?: boolean;
         };
         Media: {
             id: string;
@@ -387,6 +461,11 @@ export interface components {
             dailyCap: number;
             /** @description Reserved preference; only verified in-progress films/episodes in recorded history currently produce reminders. */
             allUnwatched: boolean;
+            /**
+             * @description Separate explicit consent for Discord removal reminders; omission on PUT disables DMs.
+             * @default false
+             */
+            discordDmEnabled: boolean;
         };
         Reminder: {
             id: number;
@@ -411,6 +490,85 @@ export interface components {
             updatedAt: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        /** @description TMDB identity; season only for TV. Whole series/season tracks first accessible episode. Discord availability alerts currently return channel_unavailable. */
+        SubscriptionInput: {
+            /** @enum {string} */
+            type: "movie" | "tv";
+            tmdbId: number;
+            season?: number;
+            /** @enum {string} */
+            channel: "hub" | "discord";
+        };
+        Subscription: {
+            id: number;
+            /** @enum {string} */
+            type: "movie" | "tv";
+            tmdbId: number;
+            season?: number;
+            /** @enum {string} */
+            channel: "hub" | "discord";
+            /** Format: date-time */
+            createdAt: string;
+            title: string;
+            /** @enum {string} */
+            status: "following" | "available" | "unavailable";
+            /** Format: uri */
+            url?: string;
+        };
+        Subscriptions: {
+            items: components["schemas"]["Subscription"][];
+            total: number;
+            offset: number;
+            /** @enum {integer} */
+            limit: 10;
+        };
+        SubscriptionResult: {
+            /** @enum {string} */
+            status: "following" | "already_available";
+            title: string;
+            /** Format: uri */
+            url?: string;
+            subscription?: components["schemas"]["Subscription"];
+        };
+        ExtensionRequest: {
+            id: number;
+            mediaId: string;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "show" | "season" | "episode";
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            estimatedAt: string;
+            days: number;
+            reason: string;
+            /** @enum {string} */
+            status: "pending" | "reviewed" | "declined";
+            adminNote: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            requester?: string;
+        };
+        ExtensionRequests: {
+            items: components["schemas"]["ExtensionRequest"][];
+        };
+        ExtensionRequestInput: {
+            mediaId: string;
+            days: number;
+            reason?: string;
+        };
+        ExtensionReview: {
+            id: number;
+            /** @enum {string} */
+            status: "reviewed" | "declined";
+            note?: string;
+        };
+        MutationOK: {
+            /** @enum {boolean} */
+            ok: true;
         };
     };
     responses: never;
@@ -924,6 +1082,225 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReminderPreferences"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getSubscriptions: {
+        parameters: {
+            query?: {
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Subscriptions"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionInput"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionResult"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationOK"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getExtensionRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionRequests"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postExtensionRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtensionRequestInput"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionRequest"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminExtensionRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionRequests"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    reviewExtensionRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtensionReview"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationOK"];
                 };
             };
             /** @description Error with stable code and French message */

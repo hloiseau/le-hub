@@ -8,6 +8,7 @@ const message = ref('')
 const failure = ref('')
 let revision = 0
 const enabled = computed(() => !demo.value && capabilities.value?.notifications === true)
+const discordAvailable = computed(() => capabilities.value?.discordDMs === true && Boolean(session.value.user?.discordId))
 async function load() {
   const current = ++revision
   preferences.value = null; message.value = ''; failure.value = ''; busy.value = false
@@ -16,7 +17,7 @@ async function load() {
   try {
     const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { retry: 0 })
     if (current !== revision) return
-    preferences.value = data; days.value = data.daysBefore.join(', ')
+    preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true }; days.value = data.daysBefore.join(', ')
   } catch (error) {
     if (current !== revision) return
     failure.value = apiMessage(error)
@@ -38,10 +39,10 @@ async function save() {
   const current = revision
   busy.value = true
   try {
-    const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { method: 'PUT', retry: 0, body: { ...p, daysBefore: values, allUnwatched: false } })
+    const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { method: 'PUT', retry: 0, body: { ...p, daysBefore: values, allUnwatched: false, discordDmEnabled: discordAvailable.value && p.enabled && p.discordDmEnabled === true } })
     if (current !== revision) return
-    preferences.value = data; days.value = data.daysBefore.join(', ')
-    message.value = data.enabled ? 'Vos rappels dans Le Hub sont activés. Vos préférences sont enregistrées.' : 'Vos rappels sont désactivés. Vos préférences sont enregistrées.'
+    preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true }; days.value = data.daysBefore.join(', ')
+    message.value = data.enabled ? `Vos rappels dans Le Hub sont activés.${data.discordDmEnabled ? ' Les messages privés Discord sont également activés.' : ''} Vos préférences sont enregistrées.` : 'Vos rappels sont désactivés. Vos préférences sont enregistrées.'
   } catch (error) {
     if (current !== revision) return
     failure.value = apiMessage(error)
@@ -49,7 +50,7 @@ async function save() {
     if (status === 401 || status === 403) await refresh()
   } finally { if (current === revision) busy.value = false }
 }
-watch([ready, enabled, () => session.value.user?.plexId, () => session.value.plexConnected], load, { immediate: true })
+watch([ready, enabled, discordAvailable, () => session.value.user?.plexId, () => session.value.plexConnected], load, { immediate: true })
 onBeforeUnmount(() => { revision++ })
 </script>
 <template>
@@ -61,7 +62,9 @@ onBeforeUnmount(() => { revision++ })
     <p v-if="busy && !preferences" class="loading" role="status">Chargement de vos préférences…</p>
     <form v-if="preferences" @submit.prevent="save">
       <fieldset :disabled="busy">
-        <label class="toggle-row"><span><strong>Activer mes rappels dans Le Hub</strong><small>Désactivés par défaut. Aucun message privé Discord.</small></span><input v-model="preferences.enabled" type="checkbox" /></label>
+        <label class="toggle-row"><span><strong>Activer mes rappels dans Le Hub</strong><small>Désactivés par défaut. Les messages privés Discord se choisissent séparément.</small></span><input v-model="preferences.enabled" type="checkbox" /></label>
+        <label class="toggle-row"><span><strong>Recevoir aussi mes rappels en message privé Discord</strong><small>Choix séparé, désactivé par défaut. Un seul récapitulatif quotidien, aux mêmes heures que vos rappels.</small></span><input v-model="preferences.discordDmEnabled" type="checkbox" :disabled="!discordAvailable || !preferences.enabled" /></label>
+        <p v-if="!discordAvailable" class="muted discord-help">{{ capabilities?.discordDMs ? 'Liez votre compte Discord pour choisir les messages privés.' : 'Les messages privés Discord ne sont pas disponibles sur ce serveur.' }}</p>
         <div class="reminder-fields">
           <label for="reminder-days">Combien de jours avant le départ ?<input id="reminder-days" v-model="days" type="text" inputmode="numeric" aria-describedby="reminder-days-help" required /><small id="reminder-days-help">De 1 à 5 délais entre 1 et 30 jours, séparés par des virgules. Exemple : 7, 2.</small></label>
           <div class="reminder-hours"><label for="quiet-start">Heures calmes : début<input id="quiet-start" v-model.number="preferences.quietStartHour" type="number" min="0" max="23" step="1" required /></label><label for="quiet-end">Fin<input id="quiet-end" v-model.number="preferences.quietEndHour" type="number" min="0" max="23" step="1" required /></label></div>

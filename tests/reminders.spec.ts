@@ -1,13 +1,13 @@
 import { test, expect, type Page } from '@playwright/test'
 
-const defaults = { enabled: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10, allUnwatched: false }
-async function signedIn(page: Page) {
+const defaults = { enabled: false, discordDmEnabled: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10, allUnwatched: false }
+async function signedIn(page: Page, discord: { enabled?: boolean, linked?: boolean } = {}) {
   let signed = true
   await page.route('**/api/v1/**', route => {
     const path = new URL(route.request().url()).pathname
     if (path.endsWith('/auth/logout')) signed = false
-    const data = path.endsWith('/session') ? { user: signed ? { name: 'Alice', plexId: '11111' } : null, plexConnected: signed }
-      : path.endsWith('/capabilities') ? { departures: true, plexLink: true, notifications: true }
+    const data = path.endsWith('/session') ? { user: signed ? { name: 'Alice', plexId: '11111', ...(discord.linked ? { discordId: '22222' } : {}) } : null, plexConnected: signed }
+      : path.endsWith('/capabilities') ? { departures: true, plexLink: true, notifications: true, discordDMs: discord.enabled === true }
         : path.endsWith('/reminders/preferences') ? defaults
           : { items: [], scope: 'recorded_history', updatedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60_000).toISOString() }
     return route.fulfill({ json: data })
@@ -29,7 +29,7 @@ test('reminder preferences opt in explicitly and persist only targeted inbox del
   })
   await page.goto('/compte')
   await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).not.toBeChecked()
-  await expect(page.getByText('Désactivés par défaut. Aucun message privé Discord.')).toBeVisible()
+  await expect(page.getByText('Désactivés par défaut. Les messages privés Discord se choisissent séparément.')).toBeVisible()
   await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
   await page.getByLabel('Combien de jours avant le départ ?').fill('7, 7')
   await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
@@ -41,7 +41,7 @@ test('reminder preferences opt in explicitly and persist only targeted inbox del
   await page.getByLabel('Nombre maximal de rappels par jour').fill('5')
   await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
   await expect(page.getByRole('status')).toContainText('rappels dans Le Hub sont activés')
-  expect(preferences).toEqual({ enabled: true, daysBefore: [10, 3], quietStartHour: 23, quietEndHour: 7, dailyCap: 5, allUnwatched: false })
+  expect(preferences).toEqual({ enabled: true, discordDmEnabled: false, daysBefore: [10, 3], quietStartHour: 23, quietEndHour: 7, dailyCap: 5, allUnwatched: false })
   await page.reload()
   await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).toBeChecked()
   await expect(page.getByLabel('Combien de jours avant le départ ?')).toHaveValue('10, 3')
@@ -58,7 +58,7 @@ test('private reminder inbox renders safely and withdraws content after an upstr
   await expect(page.getByRole('heading', { name: '<img src=x onerror=alert(1)>' })).toBeVisible()
   await expect(page.locator('.reminder-list img')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Reprendre dans Plex' })).toHaveAttribute('href', /^https:\/\/app\.plex\.tv\//)
-  await expect(page.getByText('Aucun message privé Discord n’est envoyé.', { exact: false })).toBeVisible()
+  await expect(page.getByText('Les messages privés Discord sont facultatifs et se règlent dans votre compte.', { exact: false })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   await page.screenshot({ path: testInfo.outputPath('reminder-inbox.png'), fullPage: true })
   failed = true
@@ -69,6 +69,48 @@ test('private reminder inbox renders safely and withdraws content after an upstr
   await page.getByRole('button', { name: 'Réessayer les rappels' }).click()
   await expect(page.locator('.reminder-row')).toHaveCount(1)
 })
+
+test('Discord reminder consent is separate and is cleared when reminders are disabled', async ({ page }) => {
+  await signedIn(page, { enabled: true, linked: true })
+  let preferences = { ...defaults }
+  await page.route('**/api/v1/reminders/preferences', route => {
+    if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
+    return route.fulfill({ json: preferences })
+  })
+  await page.goto('/compte')
+  const inbox = page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })
+  const discord = page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' })
+  await expect(discord).not.toBeChecked()
+  await expect(discord).toBeDisabled()
+  await inbox.check()
+  await expect(discord).toBeEnabled()
+  await expect(discord).not.toBeChecked()
+  await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await expect(page.getByRole('status')).toContainText('préférences sont enregistrées')
+  expect(preferences.discordDmEnabled).toBe(false)
+  await discord.check()
+  await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await expect(page.getByRole('status')).toContainText('Les messages privés Discord sont également activés')
+  expect(preferences.discordDmEnabled).toBe(true)
+  await page.reload()
+  await expect(discord).toBeChecked()
+  await inbox.uncheck()
+  await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await expect(page.getByRole('status')).toContainText('rappels sont désactivés')
+  expect(preferences.discordDmEnabled).toBe(false)
+  await inbox.check()
+  await expect(discord).not.toBeChecked()
+})
+
+for (const state of [{ enabled: false, linked: true }, { enabled: true, linked: false }]) {
+  test(`Discord consent requires both channel configuration and linked identity (${JSON.stringify(state)})`, async ({ page }) => {
+    await signedIn(page, state)
+    await page.goto('/compte')
+    await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
+    await expect(page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' })).toBeDisabled()
+    await expect(page.getByText(state.linked ? 'Les messages privés Discord ne sont pas disponibles sur ce serveur.' : 'Liez votre compte Discord pour choisir les messages privés.')).toBeVisible()
+  })
+}
 
 test('expired reminders disappear when fresh verification fails', async ({ page }) => {
   await signedIn(page)

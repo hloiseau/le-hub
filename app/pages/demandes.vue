@@ -23,6 +23,7 @@ function date(value: string) { return Number.isFinite(Date.parse(value)) ? new D
 </script>
 <template>
   <section class="page-heading"><p class="eyebrow">DE L’ENVIE À L’ÉCRAN</p><h1>Mes demandes<span>.</span></h1><p class="lede">Un seul endroit pour savoir où en sont vos films et séries.</p></section>
+  <p class="muted" style="margin-bottom: 20px; font-size: 12px">Un autre membre a déjà demandé votre prochaine envie ? <NuxtLink to="/suivis" class="text-button">Retrouver mes suivis <HubIcon name="arrow" /></NuxtLink></p>
   <div class="section-heading"><label class="select-label">Afficher <select v-model="status"><option value="all">Tous les états de cette page</option><option v-for="(label, value) in statusLabels" :key="value" :value="value">{{ label }}</option></select></label><a v-if="seerr" :href="seerr" target="_blank" rel="noopener noreferrer" class="button primary">Demander sur Seerr <HubIcon name="external" /></a></div>
   <EmptyState v-if="!session.user || !session.plexConnected" icon="requests" title="Vos demandes, rien qu’à vous" text="Connectez-vous avec Plex. Votre compte Seerr sera retrouvé automatiquement grâce à votre identité Plex."><NuxtLink to="/compte" class="button primary">Mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
   <p v-else-if="loading" class="loading" role="status">Récupération de vos demandes…</p>
