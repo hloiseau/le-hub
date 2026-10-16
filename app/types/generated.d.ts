@@ -217,6 +217,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Freshly authorized private inbox for current recorded viewing. No caller-selected identity; source failure returns an error with no stale items. */
+        get: operations["getReminderInbox"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reminders/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReminderPreferences"];
+        /** @description Replace personal reminder settings. Requires same-origin request. One digest daily in Europe/Paris; daysBefore is 1?30 days. */
+        put: operations["putReminderPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -262,11 +296,12 @@ export interface components {
             requests: boolean;
             recent: boolean;
             subscriptions: boolean;
+            /** @description Private inbox reminders are configured. Discord DM delivery is not available. */
             notifications: boolean;
             books: boolean;
             monitoring: boolean;
             /** @description Personal recorded viewing history; automatic reminders remain separate. */
-            departures?: boolean;
+            departures: boolean;
         };
         Media: {
             id: string;
@@ -284,6 +319,8 @@ export interface components {
             limit: number;
             /** Format: date-time */
             updatedAt: string;
+            /** @description Raw Plex cursor; null on the final page or at the 10000 offset boundary. Episode grouping never changes this cursor. */
+            nextOffset: number | null;
         };
         MediaRequest: {
             id: number;
@@ -292,7 +329,8 @@ export interface components {
             type: "movie" | "tv";
             /** @enum {string} */
             status: "pending" | "approved" | "declined" | "processing" | "partial" | "available" | "unknown";
-            createdAt: string;
+            /** @description Request creation time normalized to RFC3339 UTC. An empty string explicitly means the source date is missing or invalid. */
+            createdAt: string | "";
             mediaId: number;
             seasons: number[];
         };
@@ -334,6 +372,39 @@ export interface components {
         };
         Departures: {
             items: components["schemas"]["Departure"][];
+            /** @enum {string} */
+            scope: "recorded_history";
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        ReminderPreferences: {
+            enabled: boolean;
+            daysBefore: number[];
+            quietStartHour: number;
+            quietEndHour: number;
+            dailyCap: number;
+            /** @description Reserved preference; only verified in-progress films/episodes in recorded history currently produce reminders. */
+            allUnwatched: boolean;
+        };
+        Reminder: {
+            id: number;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "episode";
+            /** Format: date-time */
+            estimatedAt: string;
+            /** Format: uri */
+            url: string;
+            /** @enum {string} */
+            reason: "unfinished_before_removal";
+            milestoneDays: number;
+            /** Format: date-time */
+            sentAt: string;
+        };
+        ReminderInbox: {
+            items: components["schemas"]["Reminder"][];
             /** @enum {string} */
             scope: "recorded_history";
             /** Format: date-time */
@@ -762,6 +833,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Departures"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getReminderInbox: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderInbox"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getReminderPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderPreferences"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    putReminderPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderPreferences"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderPreferences"];
                 };
             };
             /** @description Error with stable code and French message */

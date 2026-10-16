@@ -19,7 +19,7 @@ watch([ready, () => session.value.user?.plexId, () => session.value.plexConnecte
 onBeforeUnmount(() => { revision++ })
 const visible = computed(() => page.value.items.filter(r => status.value === 'all' || r.status === status.value))
 const seerr = computed(() => services.value.find(s => s.id === 'seerr')?.url)
-function date(value: string) { return new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) }
+function date(value: string) { return Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' }) : 'Date inconnue' }
 </script>
 <template>
   <section class="page-heading"><p class="eyebrow">DE L’ENVIE À L’ÉCRAN</p><h1>Mes demandes<span>.</span></h1><p class="lede">Un seul endroit pour savoir où en sont vos films et séries.</p></section>

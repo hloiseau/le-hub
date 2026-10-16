@@ -19,7 +19,11 @@ Les deux premières versions sont fusionnées ; les images sont disponibles sur 
 
 `npm ci`, puis `npm run dev` avec le backend local. Voir le [guide de développement et validation](docs/development.md) pour les variables, tests, contrat API et images Docker. Le mode `NUXT_PUBLIC_DEMO=true` affiche des données fictives explicitement signalées.
 
-La page « Avant leur départ » et le bloc d’accueil affichent les départs estimés des lectures enregistrées, lorsque le backend expose la capacité `departures`. Les accès Plex, règles Maintainerr et exclusions sont vérifiés ; les données périmées sont retirées. Les demandes jamais commencées, suivis et rappels automatiques restent à réaliser. L’état d’une saison entière reste explicitement incertain. Voir le [périmètre backend](https://github.com/hloiseau/le-concierge/blob/feat/personal-departures/docs/removal-reminders.md).
+La page « Avant leur départ » et le bloc d’accueil affichent les départs estimés des lectures enregistrées, lorsque le backend expose la capacité `departures`. Les accès Plex, règles Maintainerr et exclusions sont vérifiés ; les données périmées sont retirées. L’état d’une saison entière reste explicitement incertain.
+
+Avec l’API Concierge 0.4 et la capacité `notifications`, « Mon compte » permet d’activer les rappels dans le Hub, de choisir les jours avant retrait, les heures calmes de Paris et le plafond quotidien. « Mes rappels », dans « Avant leur départ », concerne les films et épisodes déjà commencés. Un seul récapitulatif est créé chaque jour, après revalidation des sources et des droits. Les rappels nécessitent une session Plex active ; reconnectez-vous après un redémarrage du backend. Les messages privés Discord, demandes jamais commencées, suivis et demandes de délai restent à développer. Voir le [périmètre backend](https://github.com/hloiseau/le-concierge/blob/feat/private-reminders-and-recent/docs/removal-reminders.md).
+
+Les nouveautés de l’accueil proposent la pagination Plex avec dates d’ajout et regroupement par identifiant stable. Les réponses expirées ou en erreur sont effacées. Le contrat OpenAPI 0.4 est copié du Concierge et ses types TypeScript sont générés par `npm run generate:api` ; la CI vérifie leur synchronisation. Les intégrations non disponibles restent masquées par les capacités du backend.
 
 ## Périmètre
 
