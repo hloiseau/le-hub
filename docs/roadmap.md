@@ -4,6 +4,12 @@
 
 Les dépendances sont des liens vers les issues des deux dépôts. Les références Cxx/Hxx permettent de relier le découpage initial aux numéros GitHub.
 
+## Avancement au 16 octobre 2026
+
+La [PR Hub #29](https://github.com/hloiseau/le-hub/pull/29) et la [PR Concierge #40](https://github.com/hloiseau/le-concierge/pull/40) raccordent demandes, nouveautés, rappels, suivis, livres/collections, suivi Shelfmark, performances et communauté. Les tests navigateur couvrent ordinateur et mobile avec sources simulées. Le [suivi détaillé backend](https://github.com/hloiseau/le-concierge/blob/feat/private-reminders-and-recent/docs/roadmap.md) distingue code livré et recette réelle.
+
+Les imports Grimmory restent explicitement non vérifiés sans corrélation amont ; aucune liste de tomes manquants ou de nouvelles sorties n’est inventée. Le statut Kobo n’est pas simulé. Downloadarr attend la publication de son contrat personnel et la vérification de l’image installée. Les métriques et publications communautaires nécessitent une configuration explicite ; les pages effacent les données expirées, révoquées et les réponses tardives après déconnexion.
+
 ## Phase 2 — Portail V0 / V1
 
 | Ticket | Version cible | Priorité | Dépendances |
@@ -11,7 +17,7 @@ Les dépendances sont des liens vers les issues des deux dépôts. Les référen
 | [#1 — Initialiser Nuxt, TypeScript et le client API commun](https://github.com/hloiseau/le-hub/issues/1) | V0 | P0 | [C02](https://github.com/hloiseau/le-concierge/issues/2) |
 | [#2 — Construire l’accueil et les accès aux six services](https://github.com/hloiseau/le-hub/issues/2) | V0 | P0 | [H01](https://github.com/hloiseau/le-hub/issues/1) |
 | [#3 — Afficher les derniers films, séries puis livres ajoutés](https://github.com/hloiseau/le-hub/issues/3) | V0 | P1 | [H02](https://github.com/hloiseau/le-hub/issues/2), [C06](https://github.com/hloiseau/le-concierge/issues/6) |
-| [#4 — Ajouter connexion Discord et liaison des comptes](https://github.com/hloiseau/le-hub/issues/4) | V1 | P0 | [H01](https://github.com/hloiseau/le-hub/issues/1), [C04](https://github.com/hloiseau/le-concierge/issues/4) |
+| [#4 — Protéger le Hub avec Plex et lier Discord en option](https://github.com/hloiseau/le-hub/issues/4) | V1 | P0 | [H01](https://github.com/hloiseau/le-hub/issues/1), [C04](https://github.com/hloiseau/le-concierge/issues/4) |
 | [#5 — Afficher mes demandes Seerr](https://github.com/hloiseau/le-hub/issues/5) | V1 | P0 | [H04](https://github.com/hloiseau/le-hub/issues/4), [C05](https://github.com/hloiseau/le-concierge/issues/5) |
 | [#6 — Ajouter préférences et préparer la gestion des abonnements](https://github.com/hloiseau/le-hub/issues/6) | V1 | P1 | [H04](https://github.com/hloiseau/le-hub/issues/4), [C03](https://github.com/hloiseau/le-concierge/issues/3) |
 | [#7 — Publier une image Hub et documenter le déploiement](https://github.com/hloiseau/le-hub/issues/7) | V0 / V1 | P0 | [H01](https://github.com/hloiseau/le-hub/issues/1), [C10](https://github.com/hloiseau/le-concierge/issues/10) |
@@ -42,4 +48,4 @@ Les dépendances sont des liens vers les issues des deux dépôts. Les référen
 
 ## Priorité ajoutée — phase 2
 
-- [#16 — À voir avant leur départ](https://github.com/hloiseau/le-hub/issues/16), avec [les sources backend #25](https://github.com/hloiseau/le-concierge/issues/25) et [la politique de rappel #26](https://github.com/hloiseau/le-concierge/issues/26). La page de présentation est implémentée ; les données et rappels réels ne sont pas encore connectés.
+- [#16 — À voir avant leur départ](https://github.com/hloiseau/le-hub/issues/16), avec [les sources backend #25](https://github.com/hloiseau/le-concierge/issues/25) et [la politique de rappel #26](https://github.com/hloiseau/le-concierge/issues/26). La liste personnelle, les préférences, la boîte de rappels et les demandes de délai sont connectées au backend avec tests simulés. Les sources réelles doivent encore être configurées et la recette menée avec les comptes autorisés.

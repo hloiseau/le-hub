@@ -2,6 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-10-15',
   ssr: false,
   devtools: { enabled: false },
+  modules: ['@nuxt/eslint'],
   css: ['~/assets/main.css'],
   runtimeConfig: {
     apiBase: 'http://127.0.0.1:8080',

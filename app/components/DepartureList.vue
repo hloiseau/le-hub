@@ -12,7 +12,7 @@ const enabled = computed(() => !demo.value && capabilities.value?.departures ===
 const filtered = computed(() => (data.value?.items || []).filter(item => showCompleted.value || item.watch !== 'completed'))
 const visible = computed(() => props.compact ? filtered.value.slice(0, 3) : filtered.value)
 const kind = (value: string) => ({ movie: 'Film', episode: 'Épisode', season: 'Saison', show: 'Série' }[value] || 'Contenu')
-const watchLabel = (value: string) => ({ in_progress: 'Lecture commencée', completed: 'Marqué comme terminé', unknown: 'Visionnage incertain' }[value] || 'Visionnage incertain')
+const watchLabel = (value: string) => ({ unstarted: 'Marqué non vu dans Plex', in_progress: 'Lecture commencée', completed: 'Marqué comme terminé', unknown: 'Visionnage incertain' }[value] || 'Visionnage incertain')
 const date = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' }).format(new Date(value))
 const time = (value: string) => new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).format(new Date(value))
 async function load() {

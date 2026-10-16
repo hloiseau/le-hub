@@ -29,6 +29,7 @@ async function deleteAccount() {
 }
 </script>
 <template>
+  <div>
   <section class="page-heading"><p class="eyebrow">CHEZ VOUS</p><h1>Mon compte<span>.</span></h1><p class="lede">Vos identités, vos accès, vos préférences.</p></section>
   <p v-if="!ready" role="status" class="loading">Chargement de votre espace…</p>
   <template v-else-if="session.user">
@@ -38,4 +39,5 @@ async function deleteAccount() {
     <section v-else class="panel"><h2>À votre rythme</h2><p class="muted">Les rappels avant retrait font partie des prochaines priorités.</p><label class="toggle-row"><span><strong>Recevoir les futures notifications</strong><small>Préférence enregistrée, envois encore indisponibles.</small></span><input v-model="optedIn" type="checkbox" :disabled="demo" /></label><button class="button secondary" :disabled="busy || demo" @click="save">Enregistrer ma préférence</button><div class="quiet-note"><HubIcon name="bell" /><p>Prévu : rappels ciblés, regroupement et heures calmes. Aucun envoi automatique n’est actif dans cette version.</p></div></section></div>
     <section class="panel privacy-panel"><div><h2>Vos données vous appartiennent</h2><p>Supprimer votre compte local efface vos associations et préférences du Concierge. Vos comptes Discord, Plex et Seerr restent en place.</p></div><button v-if="!confirmDelete" class="text-button danger" :disabled="demo" @click="confirmDelete = true">Supprimer mon compte local</button><div v-else class="confirm-delete"><p>Confirmer la suppression de ces données locales ?</p><button class="button danger-button" :disabled="busy" @click="deleteAccount">Oui, supprimer</button><button class="button secondary" @click="confirmDelete = false">Annuler</button></div></section>
   </template>
+  </div>
 </template>

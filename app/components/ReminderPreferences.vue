@@ -17,7 +17,7 @@ async function load() {
   try {
     const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { retry: 0 })
     if (current !== revision) return
-    preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true }; days.value = data.daysBefore.join(', ')
+    preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true, availableUnwatched: data.availableUnwatched === true }; days.value = data.daysBefore.join(', ')
   } catch (error) {
     if (current !== revision) return
     failure.value = apiMessage(error)
@@ -39,9 +39,9 @@ async function save() {
   const current = revision
   busy.value = true
   try {
-    const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { method: 'PUT', retry: 0, body: { ...p, daysBefore: values, allUnwatched: false, discordDmEnabled: discordAvailable.value && p.enabled && p.discordDmEnabled === true } })
+    const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { method: 'PUT', retry: 0, body: { ...p, daysBefore: values, discordDmEnabled: discordAvailable.value && p.enabled && p.discordDmEnabled === true } })
     if (current !== revision) return
-    preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true }; days.value = data.daysBefore.join(', ')
+    preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true, availableUnwatched: data.availableUnwatched === true }; days.value = data.daysBefore.join(', ')
     message.value = data.enabled ? `Vos rappels dans Le Hub sont activés.${data.discordDmEnabled ? ' Les messages privés Discord sont également activés.' : ''} Vos préférences sont enregistrées.` : 'Vos rappels sont désactivés. Vos préférences sont enregistrées.'
   } catch (error) {
     if (current !== revision) return
@@ -56,25 +56,27 @@ onBeforeUnmount(() => { revision++ })
 <template>
   <section v-if="enabled" id="rappels" class="panel reminder-preferences">
     <h2>À votre rythme</h2>
-    <p class="muted">Des rappels dans Le Hub pour reprendre vos films et épisodes commencés avant leur départ estimé.</p>
+    <p class="muted">Des rappels avant le départ de vos films et épisodes commencés, demandés ou suivis, et les disponibilités de vos suivis.</p>
     <p v-if="message" class="banner" role="status">{{ message }}</p>
     <div v-if="failure" class="banner error-banner" role="alert">{{ failure }}<button v-if="!preferences" @click="load">Réessayer les préférences</button></div>
     <p v-if="busy && !preferences" class="loading" role="status">Chargement de vos préférences…</p>
     <form v-if="preferences" @submit.prevent="save">
       <fieldset :disabled="busy">
         <label class="toggle-row"><span><strong>Activer mes rappels dans Le Hub</strong><small>Désactivés par défaut. Les messages privés Discord se choisissent séparément.</small></span><input v-model="preferences.enabled" type="checkbox" /></label>
-        <label class="toggle-row"><span><strong>Recevoir aussi mes rappels en message privé Discord</strong><small>Choix séparé, désactivé par défaut. Un seul récapitulatif quotidien, aux mêmes heures que vos rappels.</small></span><input v-model="preferences.discordDmEnabled" type="checkbox" :disabled="!discordAvailable || !preferences.enabled" /></label>
+        <label class="toggle-row"><span><strong>Recevoir aussi mes rappels en message privé Discord</strong><small>Choix séparé, désactivé par défaut. Au plus un récapitulatif des départs et un des disponibilités par jour, avec un plafond commun.</small></span><input v-model="preferences.discordDmEnabled" type="checkbox" :disabled="!discordAvailable || !preferences.enabled" /></label>
+        <label v-if="capabilities?.departures" class="toggle-row"><span><strong>Inclure tous mes contenus non vus</strong><small>Sinon, seuls vos demandes, suivis et lectures commencées sont concernés. L’état « non vu » doit être confirmé par Plex.</small></span><input v-model="preferences.allUnwatched" type="checkbox" /></label>
+        <label v-if="capabilities?.departures && capabilities?.requests" class="toggle-row"><span><strong>Me rappeler mes anciennes demandes non vues</strong><small>Choix séparé, désactivé par défaut. Une relance entre 30 et 90 jours après la plus récente des dates de demande et d’ajout dans Plex, sans départ prévu ni lecture commencée. Elle partage votre récapitulatif et votre plafond.</small></span><input v-model="preferences.availableUnwatched" type="checkbox" :disabled="!preferences.enabled" /></label>
         <p v-if="!discordAvailable" class="muted discord-help">{{ capabilities?.discordDMs ? 'Liez votre compte Discord pour choisir les messages privés.' : 'Les messages privés Discord ne sont pas disponibles sur ce serveur.' }}</p>
         <div class="reminder-fields">
           <label for="reminder-days">Combien de jours avant le départ ?<input id="reminder-days" v-model="days" type="text" inputmode="numeric" aria-describedby="reminder-days-help" required /><small id="reminder-days-help">De 1 à 5 délais entre 1 et 30 jours, séparés par des virgules. Exemple : 7, 2.</small></label>
           <div class="reminder-hours"><label for="quiet-start">Heures calmes : début<input id="quiet-start" v-model.number="preferences.quietStartHour" type="number" min="0" max="23" step="1" required /></label><label for="quiet-end">Fin<input id="quiet-end" v-model.number="preferences.quietEndHour" type="number" min="0" max="23" step="1" required /></label></div>
           <p class="muted">Horaires de Paris. Deux heures identiques désactivent la plage calme.</p>
-          <label for="reminder-cap">Nombre maximal de rappels par jour<input id="reminder-cap" v-model.number="preferences.dailyCap" type="number" min="1" max="100" step="1" required /><small>Un seul récapitulatif quotidien, avec 10 contenus au maximum par défaut.</small></label>
+          <label for="reminder-cap">Nombre maximal de rappels par jour<input id="reminder-cap" v-model.number="preferences.dailyCap" type="number" min="1" max="100" step="1" required /><small>Départs et disponibilités partagent ce plafond : 10 contenus au maximum par défaut.</small></label>
         </div>
         <button class="button secondary" type="submit">{{ busy ? 'Enregistrement…' : 'Enregistrer mes rappels' }}</button>
       </fieldset>
     </form>
-    <div class="quiet-note"><HubIcon name="bell" /><p>Les rappels nécessitent une session Plex active. Après un redémarrage du Concierge, reconnectez-vous. Les contenus jamais commencés ne sont pas inclus.</p></div>
+    <div class="quiet-note"><HubIcon name="bell" /><p>Les rappels nécessitent une session Plex active. Après un redémarrage du Concierge, reconnectez-vous. Un état de visionnage incertain ne déclenche aucun rappel.</p></div>
     <NuxtLink to="/avant-le-depart#reminders-heading" class="text-button">Consulter mes rappels</NuxtLink>
   </section>
 </template>

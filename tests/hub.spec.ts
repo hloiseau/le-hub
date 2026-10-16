@@ -67,13 +67,14 @@ test('upstream failure is explained and retry works', async ({ page }) => {
   await page.getByRole('button', { name: 'Réessayer' }).click()
   await expect(page.getByRole('heading', { name: 'Aucune demande à afficher' })).toBeVisible()
 })
-test('navigation and upcoming metrics on small screens', async ({ page, isMobile }) => {
+test('navigation reaches the dedicated monitoring page on small screens', async ({ page, isMobile }) => {
   await api(page, true)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Interstellar' })).toBeVisible()
   if (isMobile) await page.getByRole('button', { name: 'Ouvrir la navigation' }).click()
   await page.getByRole('link', { name: 'Le serveur', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Les métriques ne sont pas encore connectées' })).toBeVisible()
+  await page.getByRole('link', { name: 'Consulter les performances' }).click()
+  await expect(page.getByRole('heading', { name: 'Les mesures ne sont pas activées' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
 })
 

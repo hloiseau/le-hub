@@ -14,7 +14,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => { clearInterval(recheck); document.removeEventListener('visibilitychange', checkOnFocus) })
 async function signOut() { try { await logout() } catch { actionError.value = 'La déconnexion a échoué. Réessayez.' } }
-const nav = [{ path: '/', icon: 'home', text: 'Accueil' }, { path: '/demandes', icon: 'requests', text: 'Mes demandes' }, { path: '/suivis', icon: 'bell', text: 'Mes suivis' }, { path: '/bibliotheque', icon: 'book', text: 'Bibliothèque' }, { path: '/serveur', icon: 'server', text: 'Le serveur' }]
+const nav = [{ path: '/', icon: 'home', text: 'Accueil' }, { path: '/demandes', icon: 'requests', text: 'Mes demandes' }, { path: '/suivis', icon: 'bell', text: 'Mes suivis' }, { path: '/bibliotheque', icon: 'book', text: 'Bibliothèque' }, { path: '/livres', icon: 'book', text: 'Livres' }, { path: '/performances', icon: 'server', text: 'Performances' }, { path: '/serveur', icon: 'server', text: 'Le serveur' }, { path: '/communaute', icon: 'spark', text: 'Communauté' }, { path: '/roadmap', icon: 'spark', text: 'Roadmap' }]
 </script>
 <template>
   <a class="skip-link" href="#main">Aller au contenu</a>

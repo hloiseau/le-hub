@@ -1,13 +1,80 @@
 import { test, expect, type Page } from '@playwright/test'
 
-const defaults = { enabled: false, discordDmEnabled: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10, allUnwatched: false }
+const defaults = { enabled: false, discordDmEnabled: false, availableUnwatched: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10, allUnwatched: false }
+
+test('old request reminders need a separate opt in and share the existing preferences', async ({ page }) => {
+  await signedIn(page)
+  let preferences = { ...defaults }
+  await page.route('**/api/v1/reminders/preferences', route => {
+    if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
+    return route.fulfill({ json: preferences })
+  })
+  await page.goto('/compte')
+  const choice = page.getByRole('checkbox', { name: 'Me rappeler mes anciennes demandes non vues' })
+  await expect(choice).not.toBeChecked()
+  await expect(choice).toBeDisabled()
+  await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
+  await expect(choice).not.toBeChecked()
+  await choice.check()
+  await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await expect(page.getByRole('status')).toContainText('préférences sont enregistrées')
+  expect(preferences.availableUnwatched).toBe(true)
+  expect(preferences.discordDmEnabled).toBe(false)
+  await page.reload()
+  await expect(choice).toBeChecked()
+  await expect(page.getByText('Une relance entre 30 et 90 jours', { exact: false })).toBeVisible()
+})
+
+test('old request inbox shows the actual Plex addition without inventing a departure', async ({ page }) => {
+  await signedIn(page)
+  const data = reminderPage()
+  const { estimatedAt: _deadline, ...base } = data.items[0]!
+  await page.route('**/api/v1/reminders', route => route.fulfill({ json: { ...data, items: [{ ...base, reason: 'available_unwatched', milestoneDays: 0, availableAt: new Date(Date.now() - 40 * 86400_000).toISOString() }] } }))
+  await page.goto('/avant-le-depart')
+  const row = page.locator('.reminder-row')
+  await expect(row).toContainText('Demandé et toujours non vu')
+  await expect(row).toContainText('Ajouté dans Plex le')
+  await expect(row).not.toContainText('Départ estimé')
+  await expect(page.getByRole('link', { name: 'Ouvrir dans Plex' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+})
+
+test('all unwatched stays optional and its explicit choice survives saving', async ({ page }) => {
+  await signedIn(page)
+  let preferences = { ...defaults }
+  await page.route('**/api/v1/reminders/preferences', route => {
+    if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
+    return route.fulfill({ json: preferences })
+  })
+  await page.goto('/compte')
+  const choice = page.getByRole('checkbox', { name: 'Inclure tous mes contenus non vus' })
+  await expect(choice).not.toBeChecked()
+  await choice.check()
+  await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await expect(page.getByRole('status')).toContainText('préférences sont enregistrées')
+  expect(preferences.allUnwatched).toBe(true)
+  await page.reload()
+  await expect(choice).toBeChecked()
+})
+
+test('unstarted reminder names the Plex state and offers to open the film', async ({ page }) => {
+  await signedIn(page)
+  const data = reminderPage()
+  data.scope = 'personal_interest'
+  data.items[0]!.reason = 'unstarted_before_removal'
+  await page.route('**/api/v1/reminders', route => route.fulfill({ json: data }))
+  await page.goto('/avant-le-depart')
+  await expect(page.locator('.reminder-row')).toContainText('Marqué non vu dans Plex')
+  await expect(page.getByRole('link', { name: 'Ouvrir dans Plex' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Reprendre dans Plex' })).toHaveCount(0)
+})
 async function signedIn(page: Page, discord: { enabled?: boolean, linked?: boolean } = {}) {
   let signed = true
   await page.route('**/api/v1/**', route => {
     const path = new URL(route.request().url()).pathname
     if (path.endsWith('/auth/logout')) signed = false
     const data = path.endsWith('/session') ? { user: signed ? { name: 'Alice', plexId: '11111', ...(discord.linked ? { discordId: '22222' } : {}) } : null, plexConnected: signed }
-      : path.endsWith('/capabilities') ? { departures: true, plexLink: true, notifications: true, discordDMs: discord.enabled === true }
+      : path.endsWith('/capabilities') ? { departures: true, requests: true, plexLink: true, notifications: true, discordDMs: discord.enabled === true }
         : path.endsWith('/reminders/preferences') ? defaults
           : { items: [], scope: 'recorded_history', updatedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60_000).toISOString() }
     return route.fulfill({ json: data })
@@ -41,7 +108,7 @@ test('reminder preferences opt in explicitly and persist only targeted inbox del
   await page.getByLabel('Nombre maximal de rappels par jour').fill('5')
   await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
   await expect(page.getByRole('status')).toContainText('rappels dans Le Hub sont activés')
-  expect(preferences).toEqual({ enabled: true, discordDmEnabled: false, daysBefore: [10, 3], quietStartHour: 23, quietEndHour: 7, dailyCap: 5, allUnwatched: false })
+  expect(preferences).toEqual({ enabled: true, discordDmEnabled: false, availableUnwatched: false, daysBefore: [10, 3], quietStartHour: 23, quietEndHour: 7, dailyCap: 5, allUnwatched: false })
   await page.reload()
   await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).toBeChecked()
   await expect(page.getByLabel('Combien de jours avant le départ ?')).toHaveValue('10, 3')

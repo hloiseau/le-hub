@@ -4,7 +4,7 @@ const { session, ready, capabilities, demo, refresh } = useHub()
 const data = ref<ReminderInbox | null>(null)
 const loading = ref(false)
 const message = ref('')
-const enabled = computed(() => !demo.value && capabilities.value?.notifications === true)
+const enabled = computed(() => !demo.value && capabilities.value?.notifications === true && capabilities.value?.departures === true)
 let revision = 0
 let timer: ReturnType<typeof setTimeout> | undefined
 const date = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeZone: 'Europe/Paris' }).format(new Date(value))
@@ -40,8 +40,8 @@ onBeforeUnmount(() => { revision++; clearTimeout(timer); document.removeEventLis
     <p v-if="loading" role="status" class="loading">Vérification de vos rappels…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="load">Réessayer les rappels</button></div>
     <template v-else-if="data">
-      <div v-if="data.items.length" class="reminder-list"><article v-for="item in data.items" :key="item.id" class="panel reminder-row"><div><span class="eyebrow">{{ item.type === 'movie' ? 'Film' : 'Épisode' }} · Lecture commencée</span><h3>{{ item.title }}</h3><p>Départ estimé le <time :datetime="item.estimatedAt">{{ date(item.estimatedAt) }}</time></p><p class="muted">Rappel du {{ date(item.sentAt) }} · échéance estimée, susceptible de changer.</p></div><a :href="item.url" target="_blank" rel="noopener noreferrer" class="button secondary">Reprendre dans Plex <HubIcon name="external" /></a></article></div>
-      <EmptyState v-else icon="bell" title="Aucun rappel disponible" text="Les rappels concernent uniquement vos films et épisodes commencés, encore accessibles et dont le départ est confirmé." />
+      <div v-if="data.items.length" class="reminder-list"><article v-for="item in data.items" :key="item.id" class="panel reminder-row"><div><span class="eyebrow">{{ item.type === 'movie' ? 'Film' : 'Épisode' }} · {{ item.reason === 'available_unwatched' ? 'Demandé et toujours non vu' : item.reason === 'unstarted_before_removal' ? 'Marqué non vu dans Plex' : 'Lecture commencée' }}</span><h3>{{ item.title }}</h3><p v-if="item.reason === 'available_unwatched' && item.availableAt">Ajouté dans Plex le <time :datetime="item.availableAt">{{ date(item.availableAt) }}</time></p><p v-else-if="item.estimatedAt">Départ estimé le <time :datetime="item.estimatedAt">{{ date(item.estimatedAt) }}</time></p><p class="muted">Rappel du {{ date(item.sentAt) }}<template v-if="item.reason !== 'available_unwatched'"> · échéance estimée, susceptible de changer.</template><template v-else> · relance unique de votre ancienne demande.</template></p></div><a :href="item.url" target="_blank" rel="noopener noreferrer" class="button secondary">{{ item.reason === 'unfinished_before_removal' || item.reason === 'episodes_remaining_before_removal' ? 'Reprendre dans Plex' : 'Ouvrir dans Plex' }} <HubIcon name="external" /></a></article></div>
+      <EmptyState v-else icon="bell" title="Aucun rappel disponible" text="Vos demandes, suivis et lectures commencées sont vérifiés avec vos accès et votre état de lecture Plex avant chaque rappel." />
       <p class="muted reminder-freshness">Rappels vérifiés le {{ date(data.updatedAt) }}. Un contenu terminé ou retiré de vos accès disparaît à l’actualisation.</p>
     </template>
     <NuxtLink to="/compte#rappels" class="button secondary">Régler mes rappels <HubIcon name="arrow" /></NuxtLink>
