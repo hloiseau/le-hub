@@ -1247,6 +1247,10 @@ export interface components {
             /** Format: date-time */
             hostUpdatedAt: string | null;
             /** Format: date-time */
+            toparrUpdatedAt: string | null;
+            /** @enum {string} */
+            toparrStatus: "not_configured" | "unavailable" | "available" | "stale" | "error";
+            /** Format: date-time */
             activityUpdatedAt: string | null;
             metrics: components["schemas"]["Metrics"];
             activity: components["schemas"]["ActivitySummary"];

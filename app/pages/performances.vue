@@ -9,6 +9,17 @@ const enabled = computed(() => ready.value && !!session.value.user && session.va
 const live = computed(() => !!snapshot.value && now.value < Date.parse(snapshot.value.expiresAt))
 const currentActivity = computed(() => live.value && snapshot.value?.activity.status === 'available' ? snapshot.value.activity : null)
 const details = computed(() => session.value.admin && live.value && admin.value && now.value < Date.parse(admin.value.expiresAt) ? admin.value : null)
+const toparrConfigured = computed(() => !!snapshot.value?.toparrStatus && snapshot.value.toparrStatus !== 'not_configured')
+const toparrExpired = computed(() => !!snapshot.value?.toparrUpdatedAt && ['available', 'unavailable'].includes(snapshot.value.toparrStatus) && now.value >= Date.parse(snapshot.value.toparrUpdatedAt) + 30_000)
+const toparrMetrics: (keyof Metrics)[] = ['gpu_video_percent', 'gpu_render_percent', 'gpu_frequency_mhz', 'gpu_power_watts']
+const toparrNotice = computed(() => {
+  switch (toparrExpired.value ? 'stale' : snapshot.value?.toparrStatus) {
+    case 'unavailable': return 'Les mesures de Toparr ne sont pas disponibles.'
+    case 'stale': return 'Toparr n’a pas transmis de mesures récentes.'
+    case 'error': return 'Les mesures de Toparr sont momentanément indisponibles.'
+    default: return ''
+  }
+})
 const groups: { name: string, keys: (keyof Metrics)[] }[] = [
   { name: 'CPU & mémoire', keys: ['cpu_percent', 'cpu_temperature', 'load_1m', 'memory_used_bytes', 'memory_total_bytes'] },
   { name: 'GPU', keys: ['gpu_video_percent', 'gpu_render_percent', 'gpu_temperature', 'gpu_power_watts', 'gpu_frequency_mhz'] },
@@ -74,10 +85,10 @@ const hw = (value: boolean | null) => value === null ? 'Non renseigné' : value 
       <p class="muted">L’accélération décrit les décodeurs et encodeurs signalés par Plex. Elle ne mesure pas l’occupation du GPU.</p>
       <p v-if="snapshot?.activityUpdatedAt" class="muted">Activité vérifiée le {{ metricDate(snapshot.activityUpdatedAt) }}.</p>
     </section>
-    <p v-if="snapshot?.hostStatus === 'not_configured'" class="inline-notice">Les mesures CPU, mémoire, GPU et réseau ne sont pas encore reliées au Hub.<template v-if="currentActivity"> L’activité Plex reste disponible.</template></p>
+    <p v-if="snapshot?.hostStatus === 'not_configured'" class="inline-notice">Les mesures CPU, mémoire, stockage et réseau ne sont pas encore reliées au Hub.<template v-if="currentActivity"> L’activité Plex reste disponible.</template></p>
     <p v-else-if="snapshot?.hostStatus === 'error'" role="alert" class="inline-notice">Le collecteur du serveur ne fournit pas de mesures lisibles. L’administrateur doit vérifier sa connexion au Hub.</p>
     <p v-else-if="snapshot?.hostStatus === 'stale'" role="status" class="inline-notice">Le collecteur du serveur n’a pas transmis de mesures récentes.</p>
-    <div class="performance-grid"><section v-for="group in groups" :key="group.name" class="panel"><h2>{{ group.name }}</h2><dl><div v-for="key in group.keys" :key="key" class="metric-row" :data-metric="key"><dt>{{ metricLabels[key] }}</dt><dd>{{ metricText(snapshot?.metrics[key], !!snapshot && !live) }}</dd></div></dl></section></div>
+    <div class="performance-grid"><section v-for="group in groups" :key="group.name" class="panel"><h2>{{ group.name }}</h2><template v-if="group.name === 'GPU' && toparrConfigured"><p class="muted">Activité GPU fournie par Toparr.</p><p v-if="toparrNotice" role="status" class="inline-notice">{{ toparrNotice }}</p><p v-if="snapshot?.toparrUpdatedAt" class="muted">Dernière mesure Toparr le {{ metricDate(snapshot.toparrUpdatedAt) }}.</p></template><dl><div v-for="key in group.keys" :key="key" class="metric-row" :data-metric="key"><dt>{{ metricLabels[key] }}</dt><dd>{{ metricText(snapshot?.metrics[key], (!!snapshot && !live) || (toparrExpired && toparrMetrics.includes(key))) }}</dd></div></dl></section></div>
     <p v-if="snapshot?.hostUpdatedAt" class="muted">Mesures de l’hôte collectées le {{ metricDate(snapshot.hostUpdatedAt) }}. Un capteur absent reste « Non disponible ».</p>
     <section class="panel history-panel" aria-labelledby="history-title"><div class="section-heading"><h2 id="history-title">Dans le temps</h2><div class="chart-selectors"><label>Mesure<select v-model="metric" aria-label="Mesure"><option v-for="(label, key) in metricLabels" :key="key" :value="key">{{ label }}</option></select></label><label>Période<select v-model="range" aria-label="Période"><option value="1h">1 heure</option><option value="24h">24 heures</option><option value="7d">7 jours</option></select></label></div></div><p v-if="historyError" role="alert">{{ historyError }} Les mesures actuelles restent indépendantes de l’historique.</p><MetricChart v-if="history" :history="history" :metric="metric" /><p v-else-if="!historyError" class="muted">L’historique apparaîtra après les premières mesures.</p><p v-if="history" class="muted">Historique chargé le {{ metricDate(history.updatedAt) }} · rétention de {{ history.retentionDays }} jours.</p></section>
     <section v-if="session.admin" class="panel admin-monitoring"><h2>Détails administrateur</h2><label><input v-model="showDetails" type="checkbox"> Afficher les sessions et les équipements</label>
