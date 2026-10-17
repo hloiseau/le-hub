@@ -577,8 +577,8 @@ export interface paths {
         };
         get: operations["getDownloadarrLink"];
         put?: never;
-        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
-        post: operations["startDownloadarrLogin"];
+        /** @description Connect the current Hub member to Downloadarr using the existing personal Plex authorization. No second browser login or credential is returned. A pending connection may be completed with the poll endpoint. */
+        post: operations["connectDownloadarr"];
         /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
         delete: operations["unlinkDownloadarr"];
         options?: never;
@@ -664,6 +664,23 @@ export interface paths {
         put?: never;
         /** @description Native same-origin POST with an empty body. Owner/session revalidated before bytes. No Range or URL tickets. Streaming uses bounded buffers and aborts at logout, revocation, expiry or disconnect. A lost/expired job is never recreated automatically. */
         post: operations["downloadPreparedFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Search the configured Plex server by title with the current Hub member token, or browse children of a show or season. Supply exactly one of q and parent. A Downloadarr connection is not required. Responses expire within 30 seconds and follow the current Hub session lifetime. No playback or conversion is started. */
+        get: operations["getDownloadLibrary"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1362,12 +1379,6 @@ export interface components {
             expiresAt?: string;
             qualityOptions?: ("720p-2" | "720p-4" | "1080p-8")[];
         };
-        DownloadarrLogin: {
-            /** Format: uri */
-            url: string;
-            /** Format: date-time */
-            expiresAt: string;
-        };
         DownloadStreamOption: {
             id: string;
             label: string;
@@ -1419,6 +1430,23 @@ export interface components {
         };
         DownloadJobs: {
             items: components["schemas"]["DownloadJob"][];
+            /** Format: date-time */
+            checkedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        DownloadLibraryItem: {
+            ratingKey: string;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "show" | "season" | "episode";
+            year?: number;
+            index?: number;
+            parentTitle?: string;
+        };
+        DownloadLibraryPage: {
+            items: components["schemas"]["DownloadLibraryItem"][];
+            nextOffset: number | null;
             /** Format: date-time */
             checkedAt: string;
             /** Format: date-time */
@@ -2812,7 +2840,7 @@ export interface operations {
             };
         };
     };
-    startDownloadarrLogin: {
+    connectDownloadarr: {
         parameters: {
             query?: never;
             header?: never;
@@ -2827,7 +2855,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DownloadarrLogin"];
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
                 };
             };
             /** @description Private error with stable code and French message. Never retry a conversion automatically. */
@@ -3046,6 +3074,41 @@ export interface operations {
                 };
             };
             /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloadLibrary: {
+        parameters: {
+            query?: {
+                /** @description Title search; mutually exclusive with parent. Trimmed, with no control characters. */
+                q?: string;
+                /** @description Personal Plex show or season rating key; mutually exclusive with q. */
+                parent?: string;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One personal page of films/shows, seasons, or episodes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadLibraryPage"];
+                };
+            };
+            /** @description Private error; no stale library results. */
             default: {
                 headers: {
                     [name: string]: unknown;

@@ -2,7 +2,7 @@
 
 Portail Nuxt pour centraliser services, demandes, bibliothèque et performances du serveur.
 
-**Statut : première version exécutable en validation.** Les fondations et premiers parcours sont implémentés et testés localement. La configuration et la validation sur les services réels restent nécessaires ; aucune installation NAS n’a été effectuée.
+**Statut : intégrations publiées, validation réelle partielle.** Les parcours sont fusionnés et les images `edge` publiées. L’administrateur confirme l’installation et le fonctionnement de Downloadarr ; les autres intégrations restent dépendantes de leur configuration et de leur recette réelle. Voir les limites dans la [roadmap](docs/roadmap.md).
 
 - [Roadmap et tickets](docs/roadmap.md)
 - [Architecture commune](docs/architecture.md)
@@ -25,7 +25,9 @@ Avec l’API Concierge 0.6 et la capacité `notifications`, « Mon compte » per
 
 « Mes suivis » permet de suivre un film, une série ou une saison déjà demandé dans Seerr, avec disponibilité vérifiée à l’ouverture et désabonnement. Un contenu devenu inaccessible conserve une ligne anonyme pour pouvoir supprimer son suivi. Les alertes de disponibilité disposent d’une boîte personnelle et de DM facultatifs sur consentement, avec déduplication des demandes déjà notifiées par Seerr et plafond commun aux rappels. « Demander un délai » crée une demande examinable par les administrateurs dans « Avant leur départ », sans modifier Maintainerr ni garantir la conservation.
 
-Les nouveautés de l’accueil proposent la pagination Plex avec dates d’ajout et regroupement par identifiant stable. Les réponses expirées ou en erreur sont effacées. Le contrat OpenAPI 0.6 est copié du Concierge et ses types TypeScript sont générés par `npm run generate:api` ; la CI vérifie leur synchronisation. Les intégrations non disponibles restent masquées par les capacités du backend.
+Les nouveautés de l’accueil proposent la pagination Plex avec dates d’ajout et regroupement par identifiant stable. Les réponses expirées ou en erreur sont effacées. Le contrat OpenAPI 0.8 est copié du Concierge et ses types TypeScript sont générés par `npm run generate:api` ; la CI vérifie leur synchronisation. Les intégrations non disponibles restent masquées par les capacités du backend.
+
+`/telechargements` utilise la connexion Plex déjà ouverte pour activer l’accès personnel Downloadarr sans seconde authentification. La recherche permet de choisir un film, une saison entière ou un épisode dans la bibliothèque personnelle ; le collage d’un lien Plex reste facultatif. La qualité et les pistes sont vérifiées avant confirmation. Le téléchargement MP4/ZIP traverse le proxy sans exposer de token au navigateur. L’image Downloadarr existante `quality-preview` reste compatible ; mettre à jour ensemble Concierge et Hub pour le contrat 0.8.
 
 Le catalogue `/livres` associe les identifiants OPDS personnels Grimmory et propose recherche, couvertures et pagination. `/collections` conserve les éditions et numérotations source, sans inventer de tomes manquants ; le guide Kobo décrit les étapes dans Grimmory sans prétendre connaître l’état de la liseuse.
 
