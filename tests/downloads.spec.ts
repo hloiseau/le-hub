@@ -168,7 +168,7 @@ test('Plex links are parsed locally and invalid or duplicated keys never reach o
   expect(JSON.stringify(state.creates)).not.toContain('private-local-input')
 })
 
-for (const entry of ['direct', 'navigation']) test(`ready files use a native same-origin POST after ${entry} entry and expiry removes their action`, async ({ page, context }, testInfo) => {
+for (const entry of ['direct', 'navigation']) test(`ready files use a native same-origin POST after ${entry} entry and expiry removes their action`, async ({ page, context, isMobile }, testInfo) => {
   await page.clock.install()
   const state = await setup(page)
   state.jobs = [job({ state: 'ready', stage: 'ready', readyCount: 1, progress: 100, expiresAt: new Date(Date.now() + 10_000).toISOString() }), job({ id: otherJobID, state: 'error', stage: 'processing', error: 'La préparation a échoué.', progress: null })]
@@ -182,7 +182,8 @@ for (const entry of ['direct', 'navigation']) test(`ready files use a native sam
   })
   if (entry === 'navigation') {
     await page.goto('/bibliotheque')
-    await page.getByRole('link', { name: 'Mes téléchargements', exact: true }).click()
+    if (isMobile) await page.getByRole('button', { name: 'Ouvrir la navigation' }).click()
+    await page.getByRole('link', { name: 'Téléchargements', exact: true }).click()
   } else await page.goto('/telechargements')
   await expect(page.locator('.download-job')).toHaveCount(2)
   const form = page.locator('.download-actions form')
@@ -266,7 +267,7 @@ test('download entry points select films only and disabled integration makes no 
   await page.getByRole('link', { name: 'Préparer Mon film pour un téléchargement' }).click()
   await expect(page.getByRole('heading', { name: 'Choisir un contenu' })).toBeVisible()
   await page.goto('/bibliotheque')
-  await expect(page.getByRole('link', { name: 'Mes téléchargements', exact: true })).toHaveAttribute('href', '/telechargements')
+  await expect(page.locator('main').getByRole('link', { name: 'Mes téléchargements', exact: true })).toHaveCount(0)
   await page.route('**/api/v1/capabilities', route => route.fulfill({ json: { plexLink: true, downloads: false } }))
   let privateReads = 0
   await page.route('**/api/v1/downloads**', route => { privateReads++; return route.fulfill({ json: {} }) })
