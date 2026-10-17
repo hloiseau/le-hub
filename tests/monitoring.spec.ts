@@ -103,3 +103,44 @@ test('monitoring is disabled explicitly and late replies cannot restore private 
   await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
   await expect(page.locator('.performance-grid')).toHaveCount(0)
 })
+
+test('history errors do not hide live server activity', async ({ page }) => {
+  await routes(page)
+  await page.route('**/api/v1/monitoring/history?**', route => route.fulfill({ status: 500, json: { error: { message: 'Historique indisponible.' } } }))
+  await page.goto('/performances')
+  await expect(page.locator('.activity-counts')).toContainText('Sessions')
+  await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('0 %')
+  await expect(page.locator('.history-panel [role="alert"]')).toContainText('Historique indisponible')
+})
+
+test('Plex activity works without a host collector and explains absent hardware measurements', async ({ page }) => {
+  await routes(page)
+  await page.route('**/api/v1/monitoring', route => route.fulfill({ json: {
+    ...snapshot(), hostStatus: 'not_configured', hostUpdatedAt: null,
+    metrics: { cpu_percent: observed(null), plex_sessions: observed(3, 'count') },
+  } }))
+  await page.goto('/performances')
+  await expect(page.locator('.activity-counts')).toContainText('Sessions')
+  await expect(page.getByText('Les mesures CPU, mémoire, GPU et réseau ne sont pas encore reliées au Hub. L’activité Plex reste disponible.')).toBeVisible()
+  await expect(page.getByLabel('Mesure', { exact: true })).toHaveValue('plex_sessions')
+})
+
+test('an administrator detail failure keeps aggregate observations visible', async ({ page }) => {
+  await routes(page, { admin: true })
+  await page.route('**/api/v1/admin/plex-activity', route => route.fulfill({ status: 503, json: { error: { message: 'Détails indisponibles.' } } }))
+  await page.goto('/performances')
+  await page.getByRole('checkbox', { name: 'Afficher les sessions et les équipements' }).check()
+  await expect(page.locator('.admin-monitoring [role="alert"]')).toContainText('Détails indisponibles')
+  await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('0 %')
+  await expect(page.locator('.activity-counts')).toContainText('Sessions')
+})
+
+test('an authorization failure withdraws all observations even when another request succeeds', async ({ page }) => {
+  await routes(page, { admin: true })
+  await page.route('**/api/v1/monitoring/history?**', route => route.fulfill({ status: 403, json: { error: { message: 'Accès Plex révoqué.' } } }))
+  await page.goto('/performances')
+  await expect(page.getByRole('alert')).toContainText('Accès Plex révoqué')
+  await expect(page.locator('.activity-counts')).toHaveCount(0)
+  await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('Non disponible')
+  await expect(page.locator('.metric-chart')).toHaveCount(0)
+})

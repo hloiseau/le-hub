@@ -687,6 +687,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/posters/plex/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPlexPoster"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -751,6 +767,7 @@ export interface components {
             recentBooks?: boolean;
             bookRequestTracking?: boolean;
             downloads?: boolean;
+            discordChannelReminders: boolean;
         };
         Media: {
             id: string;
@@ -761,6 +778,8 @@ export interface components {
             addedAt: string;
             url?: string;
             subtitle?: string;
+            /** @description Private same-origin Plex poster, checked with the current personal grant. */
+            posterUrl?: string;
         };
         Recent: {
             items: components["schemas"]["Media"][];
@@ -782,6 +801,9 @@ export interface components {
             createdAt: string | "";
             mediaId: number;
             seasons: number[];
+            /** Format: uri */
+            posterUrl?: string;
+            requesterName?: string;
         };
         RequestPage: {
             items: components["schemas"]["MediaRequest"][];
@@ -1228,6 +1250,8 @@ export interface components {
             activityUpdatedAt: string | null;
             metrics: components["schemas"]["Metrics"];
             activity: components["schemas"]["ActivitySummary"];
+            /** @enum {string} */
+            hostStatus: "not_configured" | "available" | "stale" | "error";
         };
         MonitoringHistory: {
             items: components["schemas"]["MetricSample"][];
@@ -3109,6 +3133,39 @@ export interface operations {
                 };
             };
             /** @description Private error; no stale library results. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getPlexPoster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private poster, at most 2 MiB. Never cached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Error with stable code and French message */
             default: {
                 headers: {
                     [name: string]: unknown;

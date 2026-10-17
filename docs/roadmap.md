@@ -12,6 +12,8 @@ Les imports Grimmory restent explicitement non vérifiés sans corrélation amon
 
 ## Phase 2 — Portail V0 / V1
 
+Le contrat 0.9 ajoute les affiches Plex privées et les affiches Seerr, remplace la saisie manuelle des suivis par les demandes du compte Seerr et permet de choisir les messages privés sans activer préalablement une autre case. Le bouton de téléchargement a été retiré de la page Bibliothèque. Les performances conservent les observations actuelles si l'historique ou les détails administrateur échouent et expliquent l'absence de capteurs système. Les rappels collectifs avec mention des demandeurs sont assurés par le Concierge dans le salon configuré, indépendamment des préférences DM et des connexions au Hub ; leur envoi réel reste à vérifier sur le serveur Discord.
+
 | Ticket | Version cible | Priorité | Dépendances |
 | --- | --- | --- | --- |
 | [#1 — Initialiser Nuxt, TypeScript et le client API commun](https://github.com/hloiseau/le-hub/issues/1) | V0 | P0 | [C02](https://github.com/hloiseau/le-concierge/issues/2) |

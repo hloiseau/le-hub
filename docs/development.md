@@ -28,7 +28,7 @@ Les tests navigateur couvrent les versions ordinateur et mobile, les états anon
 
 Pour une installation de Chromium déjà disponible, `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` permet d'utiliser son chemin. L'exécution locale de cette première version a utilisé Chromium 153 fourni séparément après échec du téléchargement standard de Playwright ; la CI utilise le navigateur installé par Playwright.
 
-Le contrat `api/openapi.json` vient du Concierge. Les types `app/types/generated.d.ts` sont générés via openapi-typescript ; `app/types/api.ts` les réexporte avec les libellés français. En cas d'évolution du backend, recopier son contrat versionné, régénérer, puis vérifier les usages TypeScript. La CI vérifie qu'une génération ne modifie pas le fichier committé. La synchronisation entre dépôts n'est pas automatisée.
+Le contrat `api/openapi.json` (version 0.9.0) vient du Concierge. Les types `app/types/generated.d.ts` sont générés via openapi-typescript ; `app/types/api.ts` les réexporte avec les libellés français. En cas d'évolution du backend, recopier son contrat versionné, régénérer, puis vérifier les usages TypeScript. La CI vérifie qu'une génération ne modifie pas le fichier committé. La synchronisation entre dépôts n'est pas automatisée.
 
 ## Production
 
@@ -49,6 +49,6 @@ Ces packages ne figurent pas dans le manifeste des dépendances de la sortie sta
 
 ## État réel des fonctions
 
-Accueil, liens, connexion, parcours Plex, demandes, préférences et aide sont implémentés. Les derniers ajouts utilisent des cartes graphiques sans récupération d'affiches privées. Les écrans livres, monitoring et retraits expliquent leur état à venir : ils n'affichent aucun résultat simulé comme une donnée réelle. Aucune notification proactive n'est active.
+Accueil, connexion Plex, demandes et suivis Seerr automatiques, affiches, téléchargements, livres, monitoring, retraits et préférences disposent de parcours implémentés. Chaque intégration exige ses sources et capacités côté backend ; une page disponible ne prouve pas sa configuration réelle. Les affiches Plex sont servies après contrôle de la session et des droits, sans token navigateur. Les notifications de salon et les DM personnels sont exécutés par le backend selon sa configuration et les préférences applicables. Les tests navigateur utilisent des réponses simulées ; la réception des messages, les images privées et les capteurs du NAS restent à valider sur l’installation.
 
 Le portail n’affiche aucune page avant une session Plex valide, y compris en accès direct à une URL. La liaison Discord est facultative dans Mon compte. Le mode démo n’accorde aucun accès aux données réelles et doit rester désactivé sur le NAS.
