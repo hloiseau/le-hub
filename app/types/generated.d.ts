@@ -217,6 +217,459 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Fresh private reminders for started, requested or followed media, optionally all personal Plex-unwatched media. Unknown viewing state never means unwatched. Revoked access and obsolete removal actions invalidate delivery. */
+        get: operations["getReminderInbox"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reminders/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReminderPreferences"];
+        /** @description Replace personal reminder settings. Requires same-origin request. One digest daily in Europe/Paris; daysBefore is 1?30 days. */
+        put: operations["putReminderPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSubscriptions"];
+        put?: never;
+        /** @description Origin must match PUBLIC_ORIGIN. Only the authenticated owner can follow; at most 100 follows. */
+        post: operations["postSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Owner only; matching Origin required. */
+        delete: operations["deleteSubscription"];
+        options?: never;
+        head?: never;
+        /** @description Owner only; matching Origin required. */
+        patch: operations["patchSubscriptionChannel"];
+        trace?: never;
+    };
+    "/api/v1/extension-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The owner’s 100 latest requests, retained for 90 days. */
+        get: operations["getExtensionRequests"];
+        put?: never;
+        /** @description Fresh authorized departure required, matching Origin. One request per owner/action/deadline, at most ten pending or created within 24h. Creates an administrative request without changing Maintainerr. */
+        post: operations["postExtensionRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extension-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Configured administrator only; 100 oldest pending requests, including requester display name. */
+        get: operations["getAdminExtensionRequests"];
+        /** @description Configured administrator only, matching Origin. Records manual handling or refusal; does not modify Maintainerr. */
+        put: operations["reviewExtensionRequest"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAvailabilityInbox"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/books/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBookLink"];
+        put?: never;
+        /** @description Owner only; matching Origin required. */
+        post: operations["linkBooks"];
+        /** @description Owner only; matching Origin required. */
+        delete: operations["unlinkBooks"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/books": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBooks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/book-requests/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBookRequestLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/books/{id}/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBookCover"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/monitoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMonitoring"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/monitoring/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMonitoringHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/plex-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Verified configured administrator only. Ordinary members never receive host details or session identities. */
+        get: operations["getAdminPlexActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/community": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCommunity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/roadmap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRoadmap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Verified configured administrator only. Read-only correlated Seerr/Arr diagnostic with sanitized evidence; no private paths or download identifiers. */
+        get: operations["getAdminDiagnostic"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/book-collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBookCollections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/books/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRecentBooks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/book-requests/link-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getShelfmarkLink"];
+        put?: never;
+        /** @description Owner only; matching Origin required. */
+        post: operations["linkShelfmark"];
+        /** @description Owner only; matching Origin required. */
+        delete: operations["unlinkShelfmark"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/book-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBookRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloadarrLink"];
+        put?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        post: operations["startDownloadarrLogin"];
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        delete: operations["unlinkDownloadarr"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/link/poll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        post: operations["pollDownloadarrLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloads"];
+        put?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        post: operations["createDownload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloadOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Current owner and Hub session only; matching Origin required. Bearers and source tickets remain server-side. */
+        delete: operations["cancelDownload"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/downloads/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Native same-origin POST with an empty body. Owner/session revalidated before bytes. No Range or URL tickets. Streaming uses bounded buffers and aborts at logout, revocation, expiry or disconnect. A lost/expired job is never recreated automatically. */
+        post: operations["downloadPreparedFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -262,11 +715,25 @@ export interface components {
             requests: boolean;
             recent: boolean;
             subscriptions: boolean;
+            /** @description Private removal reminder inbox is configured. Optional Discord delivery has its separate discordDMs capability and explicit consent. */
             notifications: boolean;
             books: boolean;
             monitoring: boolean;
             /** @description Personal recorded viewing history; automatic reminders remain separate. */
-            departures?: boolean;
+            departures: boolean;
+            /** @description Explicit opt-in Discord removal reminders are configured. */
+            discordDMs?: boolean;
+            /** @description Fresh departure requests can be submitted to configured administrators. */
+            extensionRequests?: boolean;
+            booksCatalog?: boolean;
+            bookRequests?: boolean;
+            subscriptionNotifications?: boolean;
+            community?: boolean;
+            roadmap?: boolean;
+            bookCollections?: boolean;
+            recentBooks?: boolean;
+            bookRequestTracking?: boolean;
+            downloads?: boolean;
         };
         Media: {
             id: string;
@@ -284,6 +751,8 @@ export interface components {
             limit: number;
             /** Format: date-time */
             updatedAt: string;
+            /** @description Raw Plex cursor; null on the final page or at the 10000 offset boundary. Episode grouping never changes this cursor. */
+            nextOffset: number | null;
         };
         MediaRequest: {
             id: number;
@@ -291,8 +760,9 @@ export interface components {
             /** @enum {string} */
             type: "movie" | "tv";
             /** @enum {string} */
-            status: "pending" | "approved" | "declined" | "processing" | "partial" | "available" | "unknown";
-            createdAt: string;
+            status: "pending" | "approved" | "declined" | "processing" | "partial" | "available" | "unknown" | "error";
+            /** @description Request creation time normalized to RFC3339 UTC. An empty string explicitly means the source date is missing or invalid. */
+            createdAt: string | "";
             mediaId: number;
             seasons: number[];
         };
@@ -326,7 +796,7 @@ export interface components {
             /** @enum {string} */
             type: "movie" | "episode" | "season" | "show";
             /** @enum {string} */
-            watch: "in_progress" | "completed" | "unknown";
+            watch: "unstarted" | "in_progress" | "completed" | "unknown";
             /** Format: date-time */
             estimatedAt: string;
             /** Format: uri */
@@ -335,9 +805,622 @@ export interface components {
         Departures: {
             items: components["schemas"]["Departure"][];
             /** @enum {string} */
-            scope: "recorded_history";
+            scope: "recorded_history" | "personal_interest";
             /** Format: date-time */
             updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        ReminderPreferences: {
+            enabled: boolean;
+            daysBefore: number[];
+            quietStartHour: number;
+            quietEndHour: number;
+            dailyCap: number;
+            /** @description Explicit opt-in to reminders for all personally accessible media positively marked unwatched by Plex. */
+            allUnwatched: boolean;
+            /**
+             * @description Separate explicit consent for Discord removal reminders; omission on PUT disables DMs.
+             * @default false
+             */
+            discordDmEnabled: boolean;
+            /**
+             * @description Separate opt-in to one delayed reminder per personal request/season, 30 to 90 days after both request and Plex addition, with no current removal risk. Omission on PUT disables it.
+             * @default false
+             */
+            availableUnwatched: boolean;
+        };
+        Reminder: {
+            id: number;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "episode";
+            /** Format: date-time */
+            estimatedAt?: string;
+            /** Format: uri */
+            url: string;
+            /** @enum {string} */
+            reason: "unfinished_before_removal" | "unstarted_before_removal" | "episodes_remaining_before_removal" | "available_unwatched";
+            milestoneDays: number;
+            /** Format: date-time */
+            sentAt: string;
+            /** Format: date-time */
+            availableAt?: string;
+        } & ({
+            /** @enum {string} */
+            reason?: "available_unwatched";
+            /** @enum {integer} */
+            milestoneDays?: 0;
+        } | {
+            /** @enum {string} */
+            reason?: "unfinished_before_removal" | "unstarted_before_removal" | "episodes_remaining_before_removal";
+            milestoneDays?: number;
+        });
+        ReminderInbox: {
+            items: components["schemas"]["Reminder"][];
+            /** @enum {string} */
+            scope: "recorded_history" | "personal_interest";
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        /** @description TMDB identity; season only for TV. Whole series/season tracks first accessible episode. Discord availability alerts currently return channel_unavailable. */
+        SubscriptionInput: {
+            /** @enum {string} */
+            type: "movie" | "tv";
+            tmdbId: number;
+            season?: number;
+            /** @enum {string} */
+            channel: "hub" | "discord";
+        };
+        Subscription: {
+            id: number;
+            /** @enum {string} */
+            type: "movie" | "tv";
+            tmdbId: number;
+            season?: number;
+            /** @enum {string} */
+            channel: "hub" | "discord";
+            /** Format: date-time */
+            createdAt: string;
+            title: string;
+            /** @enum {string} */
+            status: "following" | "available" | "unavailable";
+            /** Format: uri */
+            url?: string;
+        };
+        Subscriptions: {
+            items: components["schemas"]["Subscription"][];
+            total: number;
+            offset: number;
+            /** @enum {integer} */
+            limit: 10;
+        };
+        SubscriptionResult: {
+            /** @enum {string} */
+            status: "following" | "already_available";
+            title: string;
+            /** Format: uri */
+            url?: string;
+            subscription?: components["schemas"]["Subscription"];
+        };
+        ExtensionRequest: {
+            id: number;
+            mediaId: string;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "show" | "season" | "episode";
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            estimatedAt: string;
+            days: number;
+            reason: string;
+            /** @enum {string} */
+            status: "pending" | "reviewed" | "declined";
+            adminNote: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            requester?: string;
+        };
+        ExtensionRequests: {
+            items: components["schemas"]["ExtensionRequest"][];
+        };
+        ExtensionRequestInput: {
+            mediaId: string;
+            days: number;
+            reason?: string;
+        };
+        ExtensionReview: {
+            id: number;
+            /** @enum {string} */
+            status: "reviewed" | "declined";
+            note?: string;
+        };
+        MutationOK: {
+            /** @enum {boolean} */
+            ok: true;
+        };
+        SubscriptionChannel: {
+            /** @enum {string} */
+            channel: "hub" | "discord";
+        };
+        AvailabilityNotification: {
+            subscriptionId: number;
+            /** @enum {string} */
+            type: "movie" | "tv";
+            tmdbId: number;
+            season?: number;
+            title: string;
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            availableAt: string;
+            /** Format: date-time */
+            deliveredAt: string;
+        };
+        AvailabilityInbox: {
+            items: components["schemas"]["AvailabilityNotification"][];
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        Book: {
+            id: string;
+            title: string;
+            authors: string[];
+            series?: string;
+            volume?: string;
+            isbn?: string;
+            formats: string[];
+            /** Format: uri */
+            url?: string;
+            coverUrl?: string;
+            language?: string;
+            publisher?: string;
+        };
+        BookPage: {
+            items: components["schemas"]["Book"][];
+            page: number;
+            /** @enum {integer} */
+            pageSize: 20;
+            hasMore: boolean;
+        };
+        BookLinkStatus: {
+            linked: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        BookCredentials: {
+            username: string;
+            password: string;
+        };
+        BookRequestLink: {
+            /** Format: uri */
+            url: string;
+            /** @enum {string} */
+            mode: "external";
+            message: string;
+        };
+        MetricValue: {
+            value: number | null;
+            /** @enum {string} */
+            status: "available" | "unavailable" | "error" | "stale";
+            /** @enum {string} */
+            unit: "bytes" | "bytes_per_second" | "celsius" | "count" | "load" | "mhz" | "percent" | "watts";
+        };
+        Metrics: {
+            cpu_percent: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "percent";
+            };
+            cpu_temperature: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "celsius";
+            };
+            load_1m: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "load";
+            };
+            memory_used_bytes: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes";
+            };
+            memory_total_bytes: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes";
+            };
+            gpu_video_percent: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "percent";
+            };
+            gpu_render_percent: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "percent";
+            };
+            gpu_temperature: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "celsius";
+            };
+            gpu_power_watts: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "watts";
+            };
+            gpu_frequency_mhz: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "mhz";
+            };
+            disk_read_bytes_per_second: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes_per_second";
+            };
+            disk_write_bytes_per_second: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes_per_second";
+            };
+            network_receive_bytes_per_second: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes_per_second";
+            };
+            network_send_bytes_per_second: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes_per_second";
+            };
+            storage_used_bytes: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes";
+            };
+            storage_total_bytes: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "bytes";
+            };
+            plex_sessions: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "count";
+            };
+            plex_transcodes: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "count";
+            };
+            plex_hardware_transcodes: {
+                value: number | null;
+                /** @enum {string} */
+                status: "available" | "unavailable" | "error" | "stale";
+                /** @enum {string} */
+                unit: "count";
+            };
+        };
+        MetricSample: {
+            /** Format: date-time */
+            at: string;
+            values: components["schemas"]["Metrics"];
+        };
+        ActivitySummary: {
+            /** @enum {string} */
+            status: "available" | "unavailable" | "error";
+            sessions: number | null;
+            directPlay: number | null;
+            directStream: number | null;
+            transcodes: number | null;
+            hardwareTranscodes: number | null;
+            bandwidthKbps: number | null;
+        };
+        ActivitySession: {
+            user: string;
+            title: string;
+            state: string;
+            decision: string;
+            videoCodec: string;
+            audioCodec: string;
+            bandwidthKbps: number | null;
+            hardwareDecoding: boolean | null;
+            hardwareEncoding: boolean | null;
+        };
+        HostDetail: {
+            kind: string;
+            name: string;
+            status: string;
+            values: {
+                cpu_percent?: components["schemas"]["MetricValue"];
+                cpu_temperature?: components["schemas"]["MetricValue"];
+                load_1m?: components["schemas"]["MetricValue"];
+                memory_used_bytes?: components["schemas"]["MetricValue"];
+                memory_total_bytes?: components["schemas"]["MetricValue"];
+                gpu_video_percent?: components["schemas"]["MetricValue"];
+                gpu_render_percent?: components["schemas"]["MetricValue"];
+                gpu_temperature?: components["schemas"]["MetricValue"];
+                gpu_power_watts?: components["schemas"]["MetricValue"];
+                gpu_frequency_mhz?: components["schemas"]["MetricValue"];
+                disk_read_bytes_per_second?: components["schemas"]["MetricValue"];
+                disk_write_bytes_per_second?: components["schemas"]["MetricValue"];
+                network_receive_bytes_per_second?: components["schemas"]["MetricValue"];
+                network_send_bytes_per_second?: components["schemas"]["MetricValue"];
+                storage_used_bytes?: components["schemas"]["MetricValue"];
+                storage_total_bytes?: components["schemas"]["MetricValue"];
+                plex_sessions?: components["schemas"]["MetricValue"];
+                plex_transcodes?: components["schemas"]["MetricValue"];
+                plex_hardware_transcodes?: components["schemas"]["MetricValue"];
+            };
+        };
+        MonitoringSnapshot: {
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            hostUpdatedAt: string | null;
+            /** Format: date-time */
+            activityUpdatedAt: string | null;
+            metrics: components["schemas"]["Metrics"];
+            activity: components["schemas"]["ActivitySummary"];
+        };
+        MonitoringHistory: {
+            items: components["schemas"]["MetricSample"][];
+            /** @enum {string} */
+            range: "1h" | "24h" | "7d";
+            stepSeconds: number;
+            /** @enum {string} */
+            aggregation: "mean";
+            /** @enum {integer} */
+            retentionDays: 7;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PlexActivity: {
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            sessions: components["schemas"]["ActivitySession"][];
+            hostVersion: string;
+            hostDetails: components["schemas"]["HostDetail"][];
+            activity: components["schemas"]["ActivitySummary"];
+        };
+        CommunityThread: {
+            id: string;
+            forumId: string;
+            title: string;
+            /** @enum {string} */
+            kind: "proposal" | "problem";
+            /** @enum {string} */
+            status: "open" | "planned" | "in_progress" | "resolved" | "declined";
+            archived: boolean;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: uri */
+            url: string;
+        };
+        RoadmapItem: {
+            id: string;
+            title: string;
+            summary?: string;
+            /** @enum {string} */
+            status: "planned" | "in_progress" | "delivered";
+            dependencies: string[];
+            /** Format: date */
+            confirmedDate?: string;
+            /** Format: uri */
+            discussionUrl?: string;
+            /** Format: uri */
+            issueUrl?: string;
+        };
+        CommunityPage: {
+            items: components["schemas"]["CommunityThread"][];
+            /** Format: date-time */
+            publishedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        RoadmapPage: {
+            items: components["schemas"]["RoadmapItem"][];
+            /** Format: date-time */
+            publishedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        DiagnosticEvidence: {
+            /** @enum {string} */
+            stage: "unknown" | "approval" | "declined" | "not_found" | "downloading" | "download_failed" | "importing" | "manual_import" | "space" | "permissions" | "rename_import" | "imported" | "plex_indexing";
+            message: string;
+            /** Format: date-time */
+            at?: string;
+        };
+        Diagnostic: {
+            /** @enum {string} */
+            source: "radarr" | "sonarr";
+            version: string;
+            /** @enum {string} */
+            stage: "unknown" | "approval" | "declined" | "not_found" | "downloading" | "download_failed" | "importing" | "manual_import" | "space" | "permissions" | "rename_import" | "imported" | "plex_indexing";
+            summary: string;
+            evidence: components["schemas"]["DiagnosticEvidence"][];
+            /** Format: date-time */
+            checkedAt: string;
+            queueTruncated: boolean;
+            historyTruncated: boolean;
+            /** @enum {string} */
+            plexStatus: "indexed" | "not_verified";
+            /** Format: uri */
+            guideUrl?: string;
+        };
+        BookCollection: {
+            name: string;
+            books: components["schemas"]["Book"][];
+        };
+        BookCollectionPage: {
+            items: components["schemas"]["BookCollection"][];
+            page: number;
+            /** @enum {integer} */
+            pageSize: 20;
+            hasMore: boolean;
+            /** @enum {string} */
+            source: "grimmory_opds";
+            /** Format: date-time */
+            fetchedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** @enum {string} */
+            referenceStatus: "unavailable";
+        };
+        RecentBookPage: {
+            items: components["schemas"]["Book"][];
+            page: number;
+            /** @enum {integer} */
+            pageSize: 20;
+            hasMore: boolean;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        BookRequest: {
+            id: string;
+            title: string;
+            authors: string[];
+            /** @enum {string} */
+            status: "pending" | "fulfilled" | "rejected" | "cancelled";
+            /** @enum {string} */
+            deliveryState: "none" | "queued" | "resolving" | "locating" | "downloading" | "complete" | "error" | "cancelled";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            reviewedAt?: string;
+            /** Format: date-time */
+            deliveryUpdatedAt?: string;
+            /** @enum {string} */
+            catalogStatus: "unverified";
+        };
+        BookRequestPage: {
+            items: components["schemas"]["BookRequest"][];
+            page: number;
+            /** @enum {integer} */
+            pageSize: 20;
+            hasMore: boolean;
+            /** Format: date-time */
+            checkedAt: string;
+        };
+        DownloadarrLinkStatus: {
+            linked: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            qualityOptions?: ("720p-2" | "720p-4" | "1080p-8")[];
+        };
+        DownloadarrLogin: {
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        DownloadStreamOption: {
+            id: string;
+            label: string;
+        };
+        DownloadOptions: {
+            audio: components["schemas"]["DownloadStreamOption"][];
+            subtitle: components["schemas"]["DownloadStreamOption"][];
+            season: boolean;
+            fileCount: number;
+            title: string;
+            /** @enum {string} */
+            type: "movie" | "episode" | "season";
+        };
+        DownloadInput: {
+            ratingKey: string;
+            /** @enum {string} */
+            quality: "720p-2" | "720p-4" | "1080p-8";
+            season?: boolean;
+            partKey?: string;
+            audio?: string;
+            subtitle?: string;
+            /** @enum {boolean} */
+            confirmed: true;
+        };
+        DownloadJob: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            ratingKey: string;
+            /** Format: date-time */
+            createdAt: string;
+            season: boolean;
+            /** @enum {string} */
+            quality: "720p-2" | "720p-4" | "1080p-8";
+            filename: string;
+            /** @enum {string} */
+            state: "preparing" | "ready" | "sending" | "error";
+            readyCount: number;
+            fileCount: number;
+            /** @enum {string} */
+            stage: "deciding" | "waiting" | "processing" | "finalizing" | "ready";
+            progress: number | null;
+            error?: string;
+            /** Format: date-time */
+            expiresAt: string;
+            reused?: boolean;
+            audioLabel: string;
+            subtitleLabel: string;
+        };
+        DownloadJobs: {
+            items: components["schemas"]["DownloadJob"][];
+            /** Format: date-time */
+            checkedAt: string;
             /** Format: date-time */
             expiresAt: string;
         };
@@ -765,6 +1848,1204 @@ export interface operations {
                 };
             };
             /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getReminderInbox: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderInbox"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getReminderPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderPreferences"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    putReminderPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderPreferences"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderPreferences"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getSubscriptions: {
+        parameters: {
+            query?: {
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Subscriptions"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionInput"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionResult"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationOK"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    patchSubscriptionChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionChannel"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationOK"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getExtensionRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionRequests"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    postExtensionRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtensionRequestInput"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionRequest"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminExtensionRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionRequests"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    reviewExtensionRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtensionReview"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationOK"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAvailabilityInbox: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvailabilityInbox"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBookLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    linkBooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookCredentials"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unlinkBooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBooks: {
+        parameters: {
+            query?: {
+                q?: string;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookPage"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBookRequestLink: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookRequestLink"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBookCover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Privately authorized cover, maximum 2 MiB, no-store. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/gif": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getMonitoring: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringSnapshot"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getMonitoringHistory: {
+        parameters: {
+            query?: {
+                range?: "1h" | "24h" | "7d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringHistory"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminPlexActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlexActivity"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getCommunity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityPage"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getRoadmap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoadmapPage"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAdminDiagnostic: {
+        parameters: {
+            query: {
+                requestId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBookCollections: {
+        parameters: {
+            query?: {
+                series?: string;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookCollectionPage"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getRecentBooks: {
+        parameters: {
+            query?: {
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentBookPage"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getShelfmarkLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    linkShelfmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookCredentials"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unlinkShelfmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getBookRequests: {
+        parameters: {
+            query?: {
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookRequestPage"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloadarrLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    startDownloadarrLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLogin"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unlinkDownloadarr: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    pollDownloadarrLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadarrLinkStatus"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadJobs"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createDownload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DownloadInput"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadJob"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDownloadOptions: {
+        parameters: {
+            query: {
+                ratingKey: string;
+                quality: "720p-2" | "720p-4" | "1080p-8";
+                season?: boolean;
+                partKey?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadOptions"];
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    cancelDownload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    downloadPreparedFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified prepared attachment. No-store; no secrets or upstream URLs in headers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": string;
+                    "application/zip": string;
+                };
+            };
+            /** @description Private error with stable code and French message. Never retry a conversion automatically. */
             default: {
                 headers: {
                     [name: string]: unknown;

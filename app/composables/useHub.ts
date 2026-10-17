@@ -24,7 +24,7 @@ export function useHub() {
     const current = generation.value
     if (demo.value) {
       session.value = { user: { discordId: 'demo', name: 'Alex', plexId: 'demo', seerrId: 1, notifications: false }, plexConnected: true }
-      capabilities.value = { version: 'démo', discordLogin: false, plexLink: false, requests: true, recent: true, subscriptions: false, notifications: false, books: false, monitoring: false }
+      capabilities.value = { version: 'démo', discordLogin: false, plexLink: false, requests: true, recent: true, subscriptions: false, notifications: false, books: false, monitoring: false, departures: false }
       services.value = defaults
       ready.value = true
       refreshing.value = false
