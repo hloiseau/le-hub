@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test'
 const observed = (value: number | null, unit = 'percent', status = value === null ? 'unavailable' : 'available') => ({ value, unit, status })
 function snapshot(expires = 60_000) {
   const now = new Date().toISOString()
-  return { updatedAt: now, expiresAt: new Date(Date.now() + expires).toISOString(), hostUpdatedAt: now, activityUpdatedAt: now,
+  return { updatedAt: now, expiresAt: new Date(Date.now() + expires).toISOString(), hostStatus: 'available', hostUpdatedAt: now, activityUpdatedAt: now, toparrStatus: 'not_configured', toparrUpdatedAt: null,
     metrics: { cpu_percent: observed(0), memory_used_bytes: observed(1073741824, 'bytes'), gpu_video_percent: observed(null), cpu_temperature: observed(null, 'celsius', 'error') },
     activity: { status: 'available', sessions: 3, directPlay: 1, directStream: 1, transcodes: 1, hardwareTranscodes: null, bandwidthKbps: 3000 } }
 }
@@ -121,8 +121,75 @@ test('Plex activity works without a host collector and explains absent hardware 
   } }))
   await page.goto('/performances')
   await expect(page.locator('.activity-counts')).toContainText('Sessions')
-  await expect(page.getByText('Les mesures CPU, mémoire, GPU et réseau ne sont pas encore reliées au Hub. L’activité Plex reste disponible.')).toBeVisible()
+  await expect(page.getByText('Les mesures CPU, mémoire, stockage et réseau ne sont pas encore reliées au Hub. L’activité Plex reste disponible.')).toBeVisible()
+  await expect(page.getByText('Activité GPU fournie par Toparr.')).toHaveCount(0)
   await expect(page.getByLabel('Mesure', { exact: true })).toHaveValue('plex_sessions')
+})
+
+test('Toparr GPU measurements work without host metrics and distinguish zero from a missing sensor', async ({ page }, testInfo) => {
+  await routes(page)
+  await page.route('**/api/v1/monitoring', route => route.fulfill({ json: {
+    ...snapshot(), hostStatus: 'not_configured', hostUpdatedAt: null,
+    toparrStatus: 'available', toparrUpdatedAt: new Date().toISOString(),
+    metrics: { cpu_percent: observed(null), gpu_video_percent: observed(0), gpu_render_percent: observed(null), plex_sessions: observed(3, 'count') },
+  } }))
+  await page.goto('/performances')
+  await expect(page.getByText('Activité GPU fournie par Toparr.')).toBeVisible()
+  await expect(page.getByText(/^Dernière mesure Toparr le/)).toBeVisible()
+  await expect(page.locator('[data-metric="gpu_video_percent"] dd')).toHaveText('0 %')
+  await expect(page.locator('[data-metric="gpu_render_percent"] dd')).toHaveText('Non disponible')
+  await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('Non disponible')
+  await expect(page.getByText('Les mesures CPU, mémoire, stockage et réseau ne sont pas encore reliées au Hub. L’activité Plex reste disponible.')).toBeVisible()
+  await expect(page.locator('.activity-counts')).toContainText('Sessions')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  await page.screenshot({ path: testInfo.outputPath('monitoring-toparr.png'), fullPage: true })
+})
+
+for (const failure of [
+  { status: 'unavailable', notice: 'Les mesures de Toparr ne sont pas disponibles.', value: 'Non disponible' },
+  { status: 'stale', notice: 'Toparr n’a pas transmis de mesures récentes.', value: 'Donnée périmée' },
+  { status: 'error', notice: 'Les mesures de Toparr sont momentanément indisponibles.', value: 'Mesure en erreur' },
+]) {
+  test(`Toparr ${failure.status} leaves current CPU and Plex observations visible`, async ({ page }) => {
+    await routes(page)
+    await page.route('**/api/v1/monitoring', route => route.fulfill({ json: {
+      ...snapshot(), toparrStatus: failure.status,
+      toparrUpdatedAt: failure.status === 'stale' ? new Date(Date.now() - 300_000).toISOString() : null,
+      metrics: { ...snapshot().metrics, gpu_video_percent: observed(null, 'percent', failure.status), gpu_temperature: observed(37, 'celsius') },
+    } }))
+    await page.goto('/performances')
+    await expect(page.getByText(failure.notice)).toBeVisible()
+    await expect(page.locator('[data-metric="gpu_video_percent"] dd')).toHaveText(failure.value)
+    await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('0 %')
+    await expect(page.locator('[data-metric="gpu_temperature"] dd')).toHaveText('37 °C')
+    await expect(page.locator('.activity-counts')).toContainText('Sessions')
+    await expect(page.locator('.activity-counts')).toContainText('3')
+    await expect(page.locator('.metric-chart .curve')).toHaveCount(2)
+    await expect(page.getByText(/^Dernière mesure Toparr le/)).toHaveCount(failure.status === 'stale' ? 1 : 0)
+  })
+}
+
+test('Toparr expires independently while CPU, Plex and the host GPU temperature remain current', async ({ page }) => {
+  await routes(page)
+  await page.clock.install()
+  const data = {
+    ...snapshot(), toparrStatus: 'available', toparrUpdatedAt: new Date(Date.now() - 20_000).toISOString(),
+    metrics: { ...snapshot().metrics, gpu_video_percent: observed(0), gpu_render_percent: observed(25), gpu_frequency_mhz: observed(300, 'mhz'), gpu_power_watts: observed(10, 'watts'), gpu_temperature: observed(37, 'celsius') },
+  }
+  await page.route('**/api/v1/monitoring', route => route.fulfill({ json: data }))
+  await page.goto('/performances')
+  await expect(page.locator('[data-metric="gpu_video_percent"] dd')).toHaveText('0 %')
+  await expect(page.locator('[data-metric="gpu_render_percent"] dd')).toHaveText('25 %')
+  await page.clock.fastForward(11_000)
+  await expect(page.getByText('Toparr n’a pas transmis de mesures récentes.')).toBeVisible()
+  for (const key of ['gpu_video_percent', 'gpu_render_percent', 'gpu_frequency_mhz', 'gpu_power_watts']) {
+    await expect(page.locator(`[data-metric="${key}"] dd`)).toHaveText('Donnée périmée')
+  }
+  await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('0 %')
+  await expect(page.locator('[data-metric="gpu_temperature"] dd')).toHaveText('37 °C')
+  await expect(page.locator('.activity-counts')).toContainText('Sessions')
+  await expect(page.locator('.activity-counts')).toContainText('3')
+  await expect(page.getByText('Les mesures sont périmées. Une nouvelle vérification est nécessaire.')).toHaveCount(0)
 })
 
 test('an administrator detail failure keeps aggregate observations visible', async ({ page }) => {
