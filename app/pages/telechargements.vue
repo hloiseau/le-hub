@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { downloadQualityLabels, plexRatingKey, ratingKeyFromPlexLink, type DownloadQuality } from '~/utils/downloads'
-import type { DownloadarrLinkStatus as LinkStatus, DownloadarrLogin, DownloadOptions, DownloadJob, DownloadJobs as DownloadList } from '~/types/api'
+import type { DownloadarrLinkStatus as LinkStatus, DownloadOptions, DownloadJob, DownloadJobs as DownloadList, DownloadLibraryItem } from '~/types/api'
 
 // Native same-origin POSTs must preserve Origin for the API's CSRF check.
 useHead({ meta: [{ name: 'referrer', content: 'same-origin' }] })
@@ -22,6 +22,8 @@ const quality = ref<DownloadQuality | ''>('')
 const season = ref(false)
 const sourceLink = ref('')
 const ratingKey = ref('')
+const selectedTitle = ref('')
+const confirmationHeading = ref<HTMLHeadingElement | null>(null)
 const options = ref<DownloadOptions | null>(null)
 const audio = ref('')
 const subtitle = ref('')
@@ -29,13 +31,12 @@ const confirmed = ref(false)
 const list = ref<DownloadList | null>(null)
 const error = ref('')
 const feedback = ref('')
-const authURL = ref('')
+const pending = ref(false)
 const now = ref(Date.now())
 let generation = 0
 let optionsRevision = 0
 let jobsRevision = 0
 let pendingUntil = 0
-let popup: Window | null = null
 let pollTimer: ReturnType<typeof setTimeout> | undefined
 let flowTimer: ReturnType<typeof setTimeout> | undefined
 let grantTimer: ReturnType<typeof setTimeout> | undefined
@@ -48,14 +49,13 @@ const validChoice = computed(() => !!options.value && qualityOptions.value.inclu
 const busy = computed(() => creating.value || !!removing.value || connecting.value || checking.value)
 function date(value: string) { return Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : 'Date inconnue' }
 function invalidateOptions() { optionsRevision++; options.value = null; audio.value = ''; subtitle.value = ''; confirmed.value = false; loadingOptions.value = false }
-function closePopup() { try { popup?.close() } catch { /* A closed or inaccessible authorization tab needs no action. */ } popup = null }
-function stopFlow() { clearTimeout(pollTimer); clearTimeout(flowTimer); authURL.value = ''; pendingUntil = 0; connecting.value = false; closePopup() }
+function stopFlow() { clearTimeout(pollTimer); clearTimeout(flowTimer); pending.value = false; pendingUntil = 0; connecting.value = false }
 function clearPrivate() {
   generation++; jobsRevision++; stopFlow(); invalidateOptions()
   clearTimeout(grantTimer); clearTimeout(jobsTimer); clearTimeout(fileTimer); clearTimeout(listTimer)
-  linked.value = false; list.value = null; qualityOptions.value = []; quality.value = ''; creating.value = false; removing.value = ''; loadingJobs.value = false; checking.value = false
+  linked.value = false; list.value = null; qualityOptions.value = []; quality.value = ''; selectedTitle.value = ''; creating.value = false; removing.value = ''; loadingJobs.value = false; checking.value = false
 }
-function expire() { clearPrivate(); error.value = 'Votre association Downloadarr a expiré. Reliez votre compte pour continuer.' }
+function expire() { clearPrivate(); error.value = 'Votre accès Downloadarr a expiré. Actualisez votre accès pour continuer.' }
 function applyLink(status: LinkStatus) {
   clearTimeout(grantTimer)
   const delay = status.expiresAt ? Date.parse(status.expiresAt) - Date.now() : 0
@@ -71,11 +71,16 @@ async function failure(value: unknown) {
   if (status === 401 || status === 403) { clearPrivate(); await refresh() }
 }
 function selectedFromRoute() {
-  invalidateOptions(); sourceLink.value = ''; ratingKey.value = ''; season.value = false
+  invalidateOptions(); sourceLink.value = ''; ratingKey.value = ''; selectedTitle.value = ''; season.value = false
   if (route.query.ratingKey === undefined) return
   const key = plexRatingKey(route.query.ratingKey)
   if (key) ratingKey.value = key
   else error.value = 'Ce lien ne désigne pas un contenu Plex valide. Copiez le lien de sa fiche dans Plex.'
+}
+function selectContent(item: DownloadLibraryItem) {
+  if (busy.value || loadingOptions.value || item.type === 'show') return
+  sourceLink.value = ''; ratingKey.value = item.ratingKey; selectedTitle.value = ''; season.value = item.type === 'season'
+  void inspect()
 }
 async function initialize() {
   clearPrivate(); error.value = ''; feedback.value = ''; selectedFromRoute()
@@ -86,58 +91,50 @@ async function initialize() {
     if (current !== generation) return
     applyLink(status)
     if (linked.value) await loadJobs()
+    else { checking.value = false; await connect() }
   } catch (value) { if (current === generation) await failure(value) }
   finally { if (current === generation) checking.value = false }
 }
 function schedulePoll() {
   clearTimeout(pollTimer)
-  if (authURL.value && document.visibilityState === 'visible') pollTimer = setTimeout(poll, 2500)
+  if (pending.value && document.visibilityState === 'visible') pollTimer = setTimeout(poll, 2500)
 }
 async function connect() {
-  if (!personal.value || busy.value || authURL.value) return
+  if (!personal.value || busy.value || pending.value) return
   const current = ++generation; connecting.value = true; error.value = ''; feedback.value = ''
-  // Open synchronously with the click so browsers can keep their normal popup policy.
-  popup = window.open('about:blank', '_blank', 'popup,width=620,height=760')
-  if (popup) popup.opener = null
   try {
-    const result = await $fetch<DownloadarrLogin>('/api/v1/downloads/link', { method: 'POST', body: {}, retry: 0 })
+    const result = await $fetch<LinkStatus>('/api/v1/downloads/link', { method: 'POST', body: {}, retry: 0 })
     if (current !== generation) return
-    const target = new URL(result.url)
-    const deadline = Date.parse(result.expiresAt)
-    if (target.protocol !== 'https:' || target.hostname !== 'app.plex.tv' || target.pathname !== '/auth' || target.username || target.password || !Number.isFinite(deadline) || deadline <= Date.now()) throw new Error('invalid authorization response')
-    authURL.value = target.toString(); pendingUntil = Math.min(deadline, Date.now() + 10 * 60_000)
-    if (popup && !popup.closed) popup.location.replace(authURL.value)
-    flowTimer = setTimeout(() => { stopFlow(); error.value = 'La connexion a expiré. Vous pouvez la relancer.' }, pendingUntil - Date.now())
-    schedulePoll()
+    if (result.linked) {
+      applyLink(result)
+      if (!linked.value) throw new Error('invalid authorization response')
+      await loadJobs(); return
+    }
+    const deadline = Date.parse(result.expiresAt || '')
+    if (!Number.isFinite(deadline) || deadline <= Date.now()) throw new Error('invalid authorization response')
+    pending.value = true; pendingUntil = Math.min(deadline, Date.now() + 5 * 60_000)
+    flowTimer = setTimeout(() => { stopFlow(); error.value = 'L’activation a expiré. Vous pouvez la relancer.' }, pendingUntil - Date.now())
+    await poll()
   } catch (value) { if (current === generation) { stopFlow(); await failure(value) } }
   finally { if (current === generation) connecting.value = false }
 }
 async function poll() {
-  if (!authURL.value || !personal.value || document.visibilityState !== 'visible') return
-  if (Date.now() >= pendingUntil) { stopFlow(); error.value = 'La connexion a expiré. Vous pouvez la relancer.'; return }
+  if (!pending.value || !personal.value || document.visibilityState !== 'visible') return
+  if (Date.now() >= pendingUntil) { stopFlow(); error.value = 'L’activation a expiré. Vous pouvez la relancer.'; return }
   const current = generation
   try {
     const status = await $fetch<LinkStatus>('/api/v1/downloads/link/poll', { method: 'POST', body: {}, retry: 0 })
-    if (current !== generation || !authURL.value) return
+    if (current !== generation || !pending.value) return
     if (status.linked) {
       stopFlow(); applyLink(status)
       if (!linked.value) { error.value = 'Votre association ne permet pas de préparer un téléchargement.'; return }
-      feedback.value = 'Votre compte Downloadarr est relié.'; await loadJobs(); return
+      await loadJobs(); return
     }
   } catch (value) {
     if (current !== generation) return
-    if ((value as { statusCode?: number }).statusCode !== 429) { stopFlow(); await failure(value); return }
+    stopFlow(); await failure(value); return
   }
   if (current === generation) schedulePoll()
-}
-async function unlink() {
-  if (busy.value) return
-  clearPrivate(); const current = generation; checking.value = true; error.value = ''; feedback.value = ''
-  try {
-    await $fetch('/api/v1/downloads/link', { method: 'DELETE', body: {}, retry: 0 })
-    if (current === generation) feedback.value = 'Votre association Downloadarr a été retirée.'
-  } catch (value) { if (current === generation) await failure(value) }
-  finally { if (current === generation) checking.value = false }
 }
 function scheduleJobs() {
   clearTimeout(jobsTimer)
@@ -178,7 +175,9 @@ async function inspect() {
     const result = await $fetch<DownloadOptions>('/api/v1/downloads/options', { query: { ratingKey: ratingKey.value, quality: quality.value, season: season.value }, retry: 0 })
     if (current !== generation || request !== optionsRevision) return
     if (result.season !== season.value || !result.audio.length || !result.subtitle.length || result.fileCount < 1) throw new Error('invalid options response')
-    options.value = result; audio.value = result.audio.find(item => item.id === 'plex')?.id || result.audio[0]?.id || ''; subtitle.value = result.subtitle.find(item => item.id === 'plex')?.id || result.subtitle[0]?.id || ''
+    options.value = result; selectedTitle.value = result.title; audio.value = result.audio.find(item => item.id === 'plex')?.id || result.audio[0]?.id || ''; subtitle.value = result.subtitle.find(item => item.id === 'plex')?.id || result.subtitle[0]?.id || ''
+    await nextTick()
+    if (current === generation && request === optionsRevision) confirmationHeading.value?.focus()
   } catch (value) { if (current === generation && request === optionsRevision) await failure(value) }
   finally { if (current === generation && request === optionsRevision) loadingOptions.value = false }
 }
@@ -213,7 +212,8 @@ function visibilityChanged() {
   now.value = Date.now(); schedulePoll()
   if (linked.value) void loadJobs()
 }
-watch([quality, season, sourceLink], invalidateOptions, { flush: 'sync' })
+watch(quality, invalidateOptions, { flush: 'sync' })
+watch([season, sourceLink], () => { selectedTitle.value = ''; invalidateOptions() }, { flush: 'sync' })
 watch([audio, subtitle], () => { confirmed.value = false }, { flush: 'sync' })
 watch(() => route.query.ratingKey, selectedFromRoute)
 watch([personal, () => session.value.user?.plexId], initialize, { immediate: true, flush: 'sync' })
@@ -225,26 +225,22 @@ onBeforeUnmount(() => { clearPrivate(); sourceLink.value = ''; document.removeEv
   <div>
     <section class="page-heading"><p class="eyebrow">À EMPORTER</p><h1>Mes téléchargements<span>.</span></h1><p class="lede">Préparez un film, un épisode ou une saison à récupérer pour vos déplacements.</p></section>
     <div v-if="feedback" class="banner" role="status">{{ feedback }}</div>
-    <div v-if="error" class="banner error-banner" role="alert">{{ error }}<button v-if="!authURL" :disabled="busy || loadingJobs" @click="linked ? loadJobs() : initialize()">Actualiser mon accès</button></div>
+    <div v-if="error" class="banner error-banner" role="alert">{{ error }}<button v-if="!pending" :disabled="busy || loadingJobs" @click="linked ? loadJobs() : initialize()">Actualiser mon accès</button></div>
     <EmptyState v-if="!enabled" icon="download" title="Téléchargements à connecter" text="La préparation de fichiers depuis le Hub n’est pas activée sur ce serveur."><a v-if="externalService" :href="externalService" target="_blank" rel="noopener noreferrer" class="button secondary">Ouvrir Downloadarr <HubIcon name="external" /></a></EmptyState>
     <template v-else-if="personal">
-      <section class="panel download-access" aria-labelledby="download-access-title">
-        <div class="section-heading"><h2 id="download-access-title">Votre accès Downloadarr</h2><button v-if="linked || authURL" class="text-button" :disabled="busy" @click="unlink">Retirer mon association</button></div>
-        <p v-if="linked">Votre compte personnel est relié. Seuls vos contenus autorisés et vos préparations sont affichés.</p>
-        <template v-else-if="authURL"><p>Autorisez Downloadarr avec le même compte Plex que celui du Hub, puis revenez ici.</p><a :href="authURL" target="_blank" rel="noopener noreferrer" class="button primary">Continuer sur Plex <HubIcon name="external" /></a><p class="footnote" role="status">Vérification automatique tant que cette page est visible.</p></template>
-        <template v-else><p>Reliez Downloadarr avec le même compte Plex que celui du Hub. Votre mot de passe reste chez Plex ; aucun jeton de service n’est saisi ici.</p><button class="button primary" :disabled="busy" @click="connect">{{ connecting ? 'Ouverture de Plex…' : checking ? 'Vérification de l’accès…' : 'Relier Downloadarr avec Plex' }}<HubIcon name="external" /></button></template>
-      </section>
+      <p class="download-access" :role="linked ? undefined : 'status'">{{ linked ? 'Accès avec votre compte Plex : seuls vos contenus autorisés et vos préparations sont affichés.' : checking || connecting || pending ? 'Activation des téléchargements avec votre compte Plex…' : 'Votre accès Plex est prêt à être actualisé.' }}</p>
       <template v-if="linked">
         <section class="panel section-block" aria-labelledby="download-selection-title">
           <h2 id="download-selection-title">Choisir un contenu</h2>
+          <DownloadPicker :disabled="busy || loadingOptions" @select="selectContent" />
           <form class="download-selection" @submit.prevent="inspect">
-            <label class="source-label">Lien de la fiche Plex<input v-model="sourceLink" type="url" inputmode="url" autocomplete="off" maxlength="4096" placeholder="https://app.plex.tv/desktop/…" :disabled="creating" aria-describedby="download-source-help" /></label>
-            <p id="download-source-help" class="muted">{{ ratingKey ? 'Un contenu Plex est sélectionné. Collez un autre lien pour le remplacer.' : 'Ouvrez le film, l’épisode ou la saison dans Plex, puis copiez son adresse.' }}</p>
-            <div class="download-selectors"><label>Contenu<select v-model="season" :disabled="creating"><option :value="false">Un film ou un épisode</option><option :value="true">Une saison entière (ZIP)</option></select></label><label>Qualité<select v-model="quality" :disabled="creating"><option v-for="value in qualityOptions" :key="value" :value="value">{{ downloadQualityLabels[value] }}</option></select></label></div>
-            <button class="button secondary" type="submit" :disabled="busy || loadingOptions">{{ loadingOptions ? 'Vérification des pistes…' : 'Afficher les options' }}</button>
+            <details class="download-link-fallback"><summary>Utiliser un lien Plex à la place</summary><label class="source-label">Lien de la fiche Plex<input v-model="sourceLink" type="url" inputmode="url" autocomplete="off" maxlength="4096" placeholder="https://app.plex.tv/desktop/…" :disabled="creating" aria-describedby="download-source-help" /></label><p id="download-source-help" class="muted">Collez le lien d’un film, d’un épisode ou d’une saison ouvert dans Plex.</p><label>Contenu<select v-model="season" :disabled="creating"><option :value="false">Un film ou un épisode</option><option :value="true">Une saison entière (ZIP)</option></select></label></details>
+            <label>Qualité<select v-model="quality" :disabled="creating"><option v-for="value in qualityOptions" :key="value" :value="value">{{ downloadQualityLabels[value] }}</option></select></label>
+            <p v-if="selectedTitle && !options" class="muted">Contenu sélectionné : {{ selectedTitle }}</p>
+            <button class="button secondary" type="submit" :disabled="busy || loadingOptions || (!ratingKey && !sourceLink)">{{ loadingOptions ? 'Vérification des pistes…' : 'Afficher les options' }}</button>
           </form>
           <form v-if="options" class="download-confirmation" @submit.prevent="create">
-            <h3>{{ options.title }}</h3><p>{{ options.type === 'season' ? 'Saison' : options.type === 'episode' ? 'Épisode' : 'Film' }} · {{ options.fileCount }} fichier{{ options.fileCount > 1 ? 's' : '' }} · {{ downloadQualityLabels[quality as DownloadQuality] }}</p>
+            <h3 ref="confirmationHeading" tabindex="-1">{{ options.title }}</h3><p>{{ options.type === 'season' ? 'Saison' : options.type === 'episode' ? 'Épisode' : 'Film' }} · {{ options.fileCount }} fichier{{ options.fileCount > 1 ? 's' : '' }} · {{ downloadQualityLabels[quality as DownloadQuality] }}</p>
             <div class="download-selectors"><label>Piste audio<select v-model="audio" :disabled="creating"><option v-for="item in options.audio" :key="item.id" :value="item.id">{{ item.label }}</option></select></label><label>Sous-titres<select v-model="subtitle" :disabled="creating"><option v-for="item in options.subtitle" :key="item.id" :value="item.id">{{ item.label }}</option></select></label></div>
             <p>Le fichier MP4 contient une piste audio. Les sous-titres choisis sont incrustés dans la vidéo et ne pourront pas être masqués.</p><p v-if="options.season">Les pistes proposées sont compatibles avec chaque épisode. La sélection Plex utilise le choix actuel de chaque épisode.</p>
             <label class="download-consent"><input v-model="confirmed" type="checkbox" :disabled="creating" />Je confirme la préparation de ce contenu. Le choix de pistes peut aussi modifier leur sélection dans mon compte Plex.</label>
@@ -276,5 +272,7 @@ onBeforeUnmount(() => { clearPrivate(); sourceLink.value = ''; document.removeEv
 </template>
 
 <style scoped>
+.download-access{font-size:13px;line-height:1.8;color:var(--muted)}
+.download-link-fallback{border-top:1px solid var(--line);padding-top:18px}.download-link-fallback summary{font-size:12px;color:var(--muted);cursor:pointer}.download-link-fallback label,.download-link-fallback p{margin-top:16px}.download-link-fallback p{font-size:12px}
 .download-access p,.download-note,.download-confirmation p,.download-job p{font-size:13px;line-height:1.8;margin:12px 0}.download-access .button{margin-top:12px}.download-selection{display:grid;gap:18px;margin-top:20px}.download-selection label,.download-selectors label{display:grid;gap:8px;font-size:13px}.download-selection input{width:100%;min-width:0;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text)}.download-selection>p{font-size:12px;margin:0}.download-selectors{display:grid;grid-template-columns:1fr 1fr;gap:18px}.download-selectors select{width:100%;max-width:none;font-size:13px}.download-selection>.button{justify-self:start}.download-confirmation{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}.download-confirmation h3,.download-job h3{font-size:20px;overflow-wrap:anywhere}.download-consent{display:flex;align-items:flex-start;gap:12px;margin:22px 0;font-size:13px;line-height:1.7}.download-consent input{width:20px;height:20px;flex-shrink:0;margin-top:2px}.download-jobs{display:grid;gap:18px;margin-top:20px}.download-state{margin-top:20px!important}.download-job progress{width:100%;height:14px;accent-color:var(--purple)}.download-job p{overflow-wrap:anywhere}.download-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:18px}.download-actions form{margin:0}@media(max-width:700px){.download-selectors{grid-template-columns:1fr}.download-access .section-heading{align-items:flex-start}.download-actions{align-items:stretch;flex-direction:column}.download-actions .button{width:100%}.download-confirmation>.button{white-space:normal}}
 </style>
