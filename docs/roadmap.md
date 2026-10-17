@@ -12,6 +12,8 @@ Les imports Grimmory restent explicitement non vérifiés sans corrélation amon
 
 ## Phase 2 — Portail V0 / V1
 
+Les demandes Seerr et les réglages de notifications sont réunis dans « Mes demandes ». « Mes suivis » disparaît du menu et son ancienne adresse redirige vers cette page. Les abonnements ajoutés séparément restent gérables lorsqu’ils existent, sans recopier les demandes ni supprimer de données. Mon compte et les boîtes de rappels renvoient au même formulaire de préférences ; les annonces de salon restent distinctes du consentement aux messages privés.
+
 Le contrat 0.9 ajoute les affiches Plex privées et les affiches Seerr, remplace la saisie manuelle des suivis par les demandes du compte Seerr et permet de choisir les messages privés sans activer préalablement une autre case. Le bouton de téléchargement a été retiré de la page Bibliothèque. Les performances conservent les observations actuelles si l'historique ou les détails administrateur échouent et expliquent l'absence de capteurs système. Les rappels collectifs avec mention des demandeurs sont assurés par le Concierge dans le salon configuré, indépendamment des préférences DM et des connexions au Hub ; leur envoi réel reste à vérifier sur le serveur Discord.
 
 | Ticket | Version cible | Priorité | Dépendances |

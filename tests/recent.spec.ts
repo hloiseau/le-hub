@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test'
 async function signedIn(page: Page) {
   await page.route('**/api/v1/**', route => {
     const path = new URL(route.request().url()).pathname
-    return route.fulfill({ json: path.endsWith('/session') ? { user: { name: 'Alice', plexId: '11111' }, plexConnected: true } : path.endsWith('/capabilities') ? { recent: true, plexLink: true } : { items: [] } })
+    return route.fulfill({ json: path.endsWith('/session') ? { user: { name: 'Alice', plexId: '11111' }, plexConnected: true } : path.endsWith('/capabilities') ? { recent: true, requests: true, plexLink: true } : { items: [] } })
   })
 }
 const media = (id: string, title: string) => ({ id, title, type: 'show', addedAt: '2026-10-15T12:00:00Z', url: 'https://app.plex.tv' })

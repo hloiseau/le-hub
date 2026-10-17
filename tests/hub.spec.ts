@@ -45,14 +45,13 @@ test('personal requests render safely and filter by status', async ({ page }, te
   await expect(page.locator('.request-row')).toContainText('Fallout')
   await page.screenshot({ path: testInfo.outputPath('requests.png'), fullPage: true })
 })
-test('preferences persist, future alerts stay explicit', async ({ page }) => {
+test('unconfigured notifications do not offer a second preference form', async ({ page }) => {
   await api(page, true)
   await page.goto('/compte')
   await expect(page.getByRole('heading', { name: 'Vos comptes liés' })).toBeVisible()
-  await page.getByRole('checkbox').check()
-  await page.getByRole('button', { name: 'Enregistrer ma préférence' }).click()
-  await expect(page.getByRole('status')).toContainText('Préférence enregistrée')
-  await expect(page.getByRole('checkbox')).toBeChecked()
+  await expect(page.getByText('Les notifications ne sont pas activées sur ce serveur.')).toBeVisible()
+  await expect(page.getByRole('checkbox')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Enregistrer ma préférence' })).toHaveCount(0)
   await page.goto('/avant-le-depart')
   await expect(page.getByRole('heading', { name: 'Avant leur départ.' })).toBeVisible()
   await expect(page.getByText('Cette intégration n’est pas encore active.', { exact: false })).toBeVisible()
@@ -100,7 +99,7 @@ test('all portal routes stay behind the Plex gate without private requests', asy
   await api(page)
   const privateRequests: string[] = []
   page.on('request', r => { if (/\/api\/v1\/(services|requests|recent|preferences|departures)/.test(r.url())) privateRequests.push(r.url()) })
-  for (const route of ['/', '/demandes', '/bibliotheque', '/serveur', '/compte', '/aide', '/avant-le-depart']) {
+  for (const route of ['/', '/demandes', '/suivis', '/bibliotheque', '/serveur', '/compte', '/aide', '/avant-le-depart']) {
     await page.goto(route)
     await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
     await expect(page.getByRole('navigation')).toHaveCount(0)

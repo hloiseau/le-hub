@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ReminderPreferences } from '~/types/api'
+const emit = defineEmits<{ change: [preferences: ReminderPreferences | null] }>()
 const { session, ready, capabilities, demo, refresh } = useHub()
 const preferences = ref<ReminderPreferences | null>(null)
 const days = ref('7, 2')
@@ -12,12 +13,14 @@ const discordAvailable = computed(() => capabilities.value?.discordDMs === true 
 async function load() {
   const current = ++revision
   preferences.value = null; message.value = ''; failure.value = ''; busy.value = false
+  emit('change', null)
   if (!ready.value || !session.value.user || !session.value.plexConnected || !enabled.value) return
   busy.value = true
   try {
     const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { retry: 0 })
     if (current !== revision) return
     preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true, availableUnwatched: data.availableUnwatched === true }; days.value = data.daysBefore.join(', ')
+    emit('change', { ...preferences.value })
   } catch (error) {
     if (current !== revision) return
     failure.value = apiMessage(error)
@@ -42,6 +45,7 @@ async function save() {
     const data = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { method: 'PUT', retry: 0, body: { ...p, daysBefore: values, discordDmEnabled: discordAvailable.value && p.enabled && p.discordDmEnabled === true } })
     if (current !== revision) return
     preferences.value = { ...data, discordDmEnabled: data.discordDmEnabled === true, availableUnwatched: data.availableUnwatched === true }; days.value = data.daysBefore.join(', ')
+    emit('change', { ...preferences.value })
     message.value = data.enabled ? `Vos rappels dans Le Hub sont activés.${data.discordDmEnabled ? ' Les messages privés Discord sont également activés.' : ''} Vos préférences sont enregistrées.` : 'Vos rappels sont désactivés. Vos préférences sont enregistrées.'
   } catch (error) {
     if (current !== revision) return
@@ -55,10 +59,10 @@ watch(() => preferences.value?.discordDmEnabled, value => { if (value && prefere
 onBeforeUnmount(() => { revision++ })
 </script>
 <template>
-  <section v-if="enabled" id="rappels" class="panel reminder-preferences">
-    <h2>À votre rythme</h2>
-    <p class="muted">Des rappels avant le départ de vos films et épisodes commencés, demandés ou suivis, et les disponibilités de vos suivis.</p>
-    <p v-if="capabilities?.discordChannelReminders" class="muted">Les rappels des demandes Seerr sont publiés dans le salon notifications du serveur, avec une mention des demandeurs. Vos messages privés restent un choix personnel supplémentaire.</p>
+  <section v-if="enabled || (!demo && capabilities?.discordChannelReminders)" id="rappels" class="panel reminder-preferences">
+    <h2>Mes notifications</h2>
+    <p v-if="capabilities?.discordChannelReminders" class="muted">Les rappels avant retrait de vos demandes Seerr sont publiés dans le salon notifications, avec une mention de la personne qui a fait la demande. Ces annonces sont automatiques ; vos réglages personnels ne les désactivent pas.</p>
+    <p v-if="enabled" class="muted">Réglez vos rappels personnels avant le départ d’un film ou d’une série, et les alertes de vos contenus suivis. Les messages privés Discord sont un choix supplémentaire.</p>
     <p v-if="message" class="banner" role="status">{{ message }}</p>
     <div v-if="failure" class="banner error-banner" role="alert">{{ failure }}<button v-if="!preferences" @click="load">Réessayer les préférences</button></div>
     <p v-if="busy && !preferences" class="loading" role="status">Chargement de vos préférences…</p>
@@ -79,8 +83,8 @@ onBeforeUnmount(() => { revision++ })
         <button class="button secondary" type="submit">{{ busy ? 'Enregistrement…' : 'Enregistrer mes rappels' }}</button>
       </fieldset>
     </form>
-    <div class="quiet-note"><HubIcon name="bell" /><p>Vos rappels personnels nécessitent une session Plex active. Après un redémarrage du Concierge, reconnectez-vous. Un état de visionnage incertain ne déclenche aucun rappel personnel. Les annonces du salon notifications fonctionnent indépendamment de votre session.</p></div>
-    <NuxtLink to="/avant-le-depart#reminders-heading" class="text-button">Consulter mes rappels</NuxtLink>
+    <div v-if="enabled" class="quiet-note"><HubIcon name="bell" /><p>Vos rappels personnels nécessitent une session Plex active. Après un redémarrage du Concierge, reconnectez-vous. Un état de visionnage incertain ne déclenche aucun rappel personnel. Les annonces du salon notifications fonctionnent indépendamment de votre session.</p></div>
+    <NuxtLink v-if="capabilities?.departures" to="/avant-le-depart#reminders-heading" class="text-button">Consulter mes rappels</NuxtLink>
   </section>
 </template>
 <style scoped>

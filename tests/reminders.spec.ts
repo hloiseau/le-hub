@@ -9,7 +9,7 @@ test('old request reminders need a separate opt in and share the existing prefer
     if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/compte')
+  await page.goto('/demandes')
   const choice = page.getByRole('checkbox', { name: 'Me rappeler mes anciennes demandes non vues' })
   await expect(choice).not.toBeChecked()
   await expect(choice).toBeDisabled()
@@ -46,7 +46,7 @@ test('all unwatched stays optional and its explicit choice survives saving', asy
     if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/compte')
+  await page.goto('/demandes')
   const choice = page.getByRole('checkbox', { name: 'Inclure tous mes contenus non vus' })
   await expect(choice).not.toBeChecked()
   await choice.check()
@@ -94,7 +94,7 @@ test('reminder preferences opt in explicitly and persist only targeted inbox del
     if (route.request().method() === 'PUT') { preferences = route.request().postDataJSON(); writes++ }
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/compte')
+  await page.goto('/demandes')
   await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).not.toBeChecked()
   await expect(page.getByText('Désactivés par défaut. Les messages privés Discord se choisissent séparément.')).toBeVisible()
   await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
@@ -125,7 +125,7 @@ test('private reminder inbox renders safely and withdraws content after an upstr
   await expect(page.getByRole('heading', { name: '<img src=x onerror=alert(1)>' })).toBeVisible()
   await expect(page.locator('.reminder-list img')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Reprendre dans Plex' })).toHaveAttribute('href', /^https:\/\/app\.plex\.tv\//)
-  await expect(page.getByText('Les messages privés Discord sont facultatifs et se règlent dans votre compte.', { exact: false })).toBeVisible()
+  await expect(page.getByText('Les messages privés Discord sont facultatifs et se règlent dans Mes demandes.', { exact: false })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   await page.screenshot({ path: testInfo.outputPath('reminder-inbox.png'), fullPage: true })
   failed = true
@@ -144,7 +144,7 @@ test('Discord reminder consent is separate and is cleared when reminders are dis
     if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/compte')
+  await page.goto('/demandes')
   const inbox = page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })
   const discord = page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' })
   await expect(discord).not.toBeChecked()
@@ -175,7 +175,7 @@ test('Discord reminder consent is separate and is cleared when reminders are dis
 for (const state of [{ enabled: false, linked: true }, { enabled: true, linked: false }]) {
   test(`Discord consent requires both channel configuration and linked identity (${JSON.stringify(state)})`, async ({ page }) => {
     await signedIn(page, state)
-    await page.goto('/compte')
+    await page.goto('/demandes')
     await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
     await expect(page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' })).toBeDisabled()
     await expect(page.getByText(state.linked ? 'Les messages privés Discord ne sont pas disponibles sur ce serveur.' : 'Liez votre compte Discord pour choisir les messages privés.')).toBeVisible()
