@@ -4,7 +4,7 @@ const poster = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAwCAIAAAD/zu84AAAAL0lE
 async function signedIn(page: Page) {
   await page.route('**/api/v1/**', route => {
     const path = new URL(route.request().url()).pathname
-    return route.fulfill({ json: path.endsWith('/session') ? { user: { name: 'Alice', plexId: '11111' }, plexConnected: true } : path.endsWith('/capabilities') ? { recent: true, plexLink: true } : { items: [] } })
+    return route.fulfill({ json: path.endsWith('/session') ? { user: { name: 'Alice', plexId: '11111' }, plexConnected: true } : path.endsWith('/capabilities') ? { recent: true, requests: true, plexLink: true } : { items: [] } })
   })
 }
 

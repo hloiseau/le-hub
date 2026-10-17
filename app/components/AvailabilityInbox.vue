@@ -39,17 +39,16 @@ onBeforeUnmount(() => { generation++; clearTimeout(timer); document.removeEventL
 </script>
 
 <template>
-  <section v-if="enabled" class="section-block availability-inbox" aria-labelledby="availability-heading">
+  <section v-if="enabled && (loading || message || data?.items.length)" class="section-block availability-inbox" aria-labelledby="availability-heading">
     <div class="section-heading"><div><span class="eyebrow">VOS ENVIES SONT ARRIVÉES</span><h2 id="availability-heading">Mes disponibilités</h2></div><button class="button secondary" :disabled="loading" @click="load">Actualiser les disponibilités</button></div>
     <p class="muted availability-note">Un récapitulatif par jour, selon vos heures calmes et le plafond partagé avec vos rappels avant départ. Discord reste facultatif, au choix pour chaque suivi.</p>
     <p v-if="loading" role="status" class="loading">Vérification de vos disponibilités…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="load">Réessayer les disponibilités</button></div>
     <template v-else-if="data">
       <div v-if="data.items.length" class="availability-list"><article v-for="item in data.items" :key="item.subscriptionId" class="panel availability-row"><div><span class="eyebrow">{{ item.type === 'movie' ? 'Film' : 'Série' }}<span v-if="item.season !== undefined"> · Saison {{ item.season }}</span></span><h3>{{ item.title }}</h3><p>Disponible pour vous · notification du <time :datetime="item.deliveredAt">{{ date(item.deliveredAt) }}</time></p></div><a v-if="safePlexURL(item.url)" :href="safePlexURL(item.url)" target="_blank" rel="noopener noreferrer" class="button secondary">Ouvrir dans Plex <HubIcon name="external" /></a></article></div>
-      <EmptyState v-else icon="bell" title="Aucune nouvelle disponibilité" text="Les notifications activées apparaîtront ici quand un contenu suivi sera accessible dans votre Plex. Vos propres demandes sont prises en charge par Seerr." />
       <p class="muted availability-note">Les 20 notifications les plus récentes sont conservées jusqu’à 90 jours. Chaque affichage vérifie vos accès actuels.</p>
     </template>
-    <NuxtLink to="/compte#rappels" class="button secondary">Régler mes notifications <HubIcon name="arrow" /></NuxtLink>
+    <NuxtLink to="/demandes#rappels" class="button secondary">Régler mes notifications <HubIcon name="arrow" /></NuxtLink>
   </section>
 </template>
 
