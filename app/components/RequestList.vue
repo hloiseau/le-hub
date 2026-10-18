@@ -2,6 +2,13 @@
 import { statusLabels } from '~/types/api'
 import type { MediaRequest, RequestStatus } from '~/types/api'
 const props = defineProps<{ items: MediaRequest[], seerrUrl?: string }>()
+const { session, demo } = useHub()
+const openDetails = ref<number[]>([])
+function toggleDetail(id: number, event: Event) {
+  const open = (event.target as HTMLDetailsElement).open
+  openDetails.value = open ? [...new Set([...openDetails.value, id])] : openDetails.value.filter(value => value !== id)
+}
+watch(() => props.items, () => { openDetails.value = [] }, { flush: 'sync' })
 const statusDetails: Record<RequestStatus, string> = {
   pending: 'Seerr attend une décision sur cette demande.',
   approved: 'Seerr a approuvé cette demande. Aucune disponibilité n’est encore confirmée.',
@@ -25,7 +32,7 @@ function requestURL(request: MediaRequest) {
 function date(value: string) { return Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' }) : 'Date inconnue' }
 </script>
 <template>
-<div class="request-list"><article v-for="request in items" :key="request.id" class="request-row"><span class="request-poster"><MediaArtwork :src="request.posterUrl" /></span><div class="request-info"><h3>{{ request.title }}</h3><p>{{ request.type === 'movie' ? 'Film' : 'Série' }}<span v-if="request.seasons.length"> · Saison{{ request.seasons.length > 1 ? 's' : '' }} {{ request.seasons.join(', ') }}</span> · {{ date(request.createdAt) }}</p><p v-if="request.requesterName">Demandé par {{ request.requesterName }}</p><details class="request-detail"><summary>Détail du suivi<span class="sr-only"> de {{ request.title }}</span></summary><p>{{ statusDetails[request.status] || statusDetails.unknown }}</p><p>Demande Seerr n° {{ request.id }} · Source : Seerr</p><a v-if="requestURL(request)" :href="requestURL(request)" target="_blank" rel="noopener noreferrer" class="text-button">Ouvrir la fiche dans Seerr <HubIcon name="external" /></a></details></div><span class="status-badge" :class="request.status">{{ statusLabels[request.status] || 'État inconnu' }}</span></article></div>
+<div class="request-list"><article v-for="request in items" :key="request.id" class="request-row"><span class="request-poster"><MediaArtwork :src="request.posterUrl" /></span><div class="request-info"><h3>{{ request.title }}</h3><p>{{ request.type === 'movie' ? 'Film' : 'Série' }}<span v-if="request.seasons.length"> · Saison{{ request.seasons.length > 1 ? 's' : '' }} {{ request.seasons.join(', ') }}</span> · {{ date(request.createdAt) }}</p><p v-if="request.requesterName">Demandé par {{ request.requesterName }}</p><details class="request-detail" :open="openDetails.includes(request.id)" @toggle="toggleDetail(request.id, $event)"><summary>Détail du suivi<span class="sr-only"> de {{ request.title }}</span></summary><p>{{ statusDetails[request.status] || statusDetails.unknown }}</p><p>Demande Seerr n° {{ request.id }} · Source : Seerr</p><a v-if="requestURL(request)" :href="requestURL(request)" target="_blank" rel="noopener noreferrer" class="text-button">Ouvrir la fiche dans Seerr <HubIcon name="external" /></a><RequestDiagnostic v-if="openDetails.includes(request.id) && session.admin && !demo" :request-id="request.id" /></details></div><span class="status-badge" :class="request.status">{{ statusLabels[request.status] || 'État inconnu' }}</span></article></div>
 </template>
 <style scoped>
 .request-poster{width:54px;height:81px;flex-shrink:0;border-radius:6px;overflow:hidden}.request-info{min-width:0;flex:1}@media(max-width:700px){.request-row{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start}.request-poster{width:44px;height:66px;grid-row:1/3}.request-row .status-badge{grid-column:2;margin-left:0;justify-self:start}}

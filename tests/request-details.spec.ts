@@ -4,9 +4,11 @@ test('request details distinguish source states and link only to configured Seer
   const states = ['available', 'partial', 'processing', 'error', 'unknown']
   await page.route('**/api/v1/**', route => {
     const path = new URL(route.request().url()).pathname
+    const filter = new URL(route.request().url()).searchParams.get('status')
+    const items = states.map((status, i) => ({ id: i + 1, title: i === 0 ? '<img src=x onerror=alert(1)>' : `Demande ${status}`, type: i === 1 ? 'tv' : 'movie', status, createdAt: '2026-10-16T12:00:00Z', mediaId: 100 + i, seasons: i === 1 ? [1, 2] : [] })).filter(item => !filter || item.status === filter)
     const json = path.endsWith('/session') ? { user: { name: 'Alice', plexId: '1', seerrId: 42 }, plexConnected: true }
       : path.endsWith('/services') ? { items: [{ id: 'seerr', name: 'Seerr', description: '', category: 'watch', url: 'https://requests.example/base/' }] }
-        : path.endsWith('/requests') ? { items: states.map((status, i) => ({ id: i + 1, title: i === 0 ? '<img src=x onerror=alert(1)>' : `Demande ${status}`, type: i === 1 ? 'tv' : 'movie', status, createdAt: '2026-10-16T12:00:00Z', mediaId: 100 + i, seasons: i === 1 ? [1, 2] : [] })), total: 5, offset: 0, limit: 10 }
+        : path.endsWith('/requests') ? { items, total: items.length, offset: 0, limit: 10 }
           : { requests: true }
     return route.fulfill({ json })
   })
