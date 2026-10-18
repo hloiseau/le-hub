@@ -53,3 +53,36 @@ test('request detail does not build a link for invalid media IDs or absent servi
   await expect(page.locator('.request-row')).toBeVisible()
   await expect(page.locator('.request-detail a')).toHaveCount(0)
 })
+
+test('standard and 4K requests keep their own source status and diagnostic selection', async ({ page }, testInfo) => {
+  const inspected: string[] = []
+  await page.route('**/api/v1/**', route => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/admin/diagnostics')) {
+      inspected.push(url.searchParams.get('requestId') || '')
+      return route.fulfill({ json: { source: 'sonarr', version: '5.0.0', stage: 'unknown', summary: 'Observation de la demande sélectionnée.', evidence: [], checkedAt: '2026-10-18T12:00:00Z', queueTruncated: false, historyTruncated: false, plexStatus: 'not_verified' } })
+    }
+    const request = { title: 'Une même série', type: 'tv', mediaId: 101, createdAt: '2026-10-18T12:00:00Z', seasons: [1, 2] }
+    const json = url.pathname.endsWith('/session') ? { user: { name: 'Alice', plexId: '1' }, plexConnected: true, admin: true }
+      : url.pathname.endsWith('/services') ? { items: [] }
+        : url.pathname.endsWith('/requests') ? { items: [{ ...request, id: 7, is4k: false, status: 'available' }, { ...request, id: 8, is4k: true, status: 'processing' }, { ...request, id: 9, status: 'unknown' }], total: 3, offset: 0, limit: 10 }
+          : { requests: true }
+    return route.fulfill({ json })
+  })
+  await page.goto('/demandes')
+  const rows = page.locator('.request-row')
+  await expect(rows).toHaveCount(3)
+  await expect(rows.nth(0).locator('.request-quality')).toHaveText('· Demande standard')
+  await expect(rows.nth(1).locator('.request-quality')).toHaveText('· Demande 4K')
+  await expect(rows.nth(2).locator('.request-quality')).toHaveCount(0)
+  await expect(rows.nth(0).locator('.status-badge')).toHaveText('Disponible')
+  await expect(rows.nth(1).locator('.status-badge')).toHaveText('En cours')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  await page.screenshot({ path: testInfo.outputPath('request-quality.png'), fullPage: true })
+  for (const row of [rows.nth(1), rows.nth(0)]) {
+    await row.locator('summary').click()
+    await row.getByRole('button', { name: 'Vérifier cette demande' }).click()
+    await expect(row.locator('.diagnostic-result')).toBeVisible()
+  }
+  expect(inspected).toEqual(['8', '7'])
+})

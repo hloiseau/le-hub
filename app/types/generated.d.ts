@@ -805,6 +805,8 @@ export interface components {
             /** Format: uri */
             posterUrl?: string;
             requesterName?: string;
+            /** @description Seerr request variant, not the measured resolution of a file. Omitted when the source does not provide it; false means a standard request. */
+            is4k?: boolean;
         };
         RequestPage: {
             items: components["schemas"]["MediaRequest"][];
@@ -1213,6 +1215,16 @@ export interface components {
             bandwidthKbps: number | null;
             hardwareDecoding: boolean | null;
             hardwareEncoding: boolean | null;
+            /**
+             * @description Stream decision reported by Tautulli. Omitted when absent or unrecognized; never inferred from the overall session decision.
+             * @enum {string}
+             */
+            videoDecision?: "direct play" | "copy" | "transcode";
+            /**
+             * @description Stream decision reported by Tautulli. Omitted when absent or unrecognized; never inferred from the overall session decision.
+             * @enum {string}
+             */
+            audioDecision?: "direct play" | "copy" | "transcode";
         };
         HostDetail: {
             kind: string;

@@ -29,6 +29,10 @@ Les nouveautés de l’accueil proposent la pagination Plex avec dates d’ajout
 
 Le filtre d’état de « Mes demandes » porte sur toutes les demandes personnelles, avant pagination. Si Seerr ne fournit pas une liste complète dans la limite de 1 000 demandes et six secondes, une erreur explicite remplace le résultat ; « Tous les états » conserve la pagination habituelle. Les administrateurs peuvent ouvrir « Détail du suivi → Vérifier cette demande » pour consulter le diagnostic Radarr/Sonarr et la vérification Plex existants, sans recopier d’identifiant. Les observations sont datées et ne déclenchent aucune action sur le média.
 
+Les demandes standard et 4K du même titre restent distinctes. Le libellé reprend le choix Seerr lorsqu’il est renseigné ; il ne certifie pas la résolution du fichier dans Plex. L’aide présente aussi `/a-voir` : cette commande Discord retrouve les départs personnels et reste privée.
+
+Les détails administrateur des performances distinguent aussi la décision vidéo de la décision audio lorsqu’elles sont fournies par Tautulli. Une session peut ainsi transcoder uniquement son audio tout en recopiant la vidéo, sans en déduire une utilisation du GPU.
+
 `/telechargements` utilise la connexion Plex déjà ouverte pour activer l’accès personnel Downloadarr sans seconde authentification. La recherche permet de choisir un film, une saison entière ou un épisode dans la bibliothèque personnelle ; le collage d’un lien Plex reste facultatif. La qualité et les pistes sont vérifiées avant confirmation. Le téléchargement MP4/ZIP traverse le proxy sans exposer de token au navigateur. L’image Downloadarr existante `quality-preview` reste compatible ; mettre à jour ensemble Concierge et Hub pour le contrat 0.9. Le téléchargement possède son entrée dédiée et n’apparaît plus dans la page bibliothèque de livres.
 
 Le catalogue `/livres` associe les identifiants OPDS personnels Grimmory et propose recherche, couvertures et pagination. `/collections` conserve les éditions et numérotations source, sans inventer de tomes manquants ; le guide Kobo décrit les étapes dans Grimmory sans prétendre connaître l’état de la liseuse.
