@@ -294,10 +294,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description The owner’s 100 latest requests, retained for 90 days. */
+        /** @description The owner's 100 latest requests, retained for 90 days. Pending requests past their estimated deadline are reported as expired. */
         get: operations["getExtensionRequests"];
         put?: never;
-        /** @description Fresh authorized departure required, matching Origin. One request per owner/action/deadline, at most ten pending or created within 24h. Creates an administrative request without changing Maintainerr. */
+        /** @description Fresh authorized departure required, matching Origin. One request per owner/action/deadline, at most ten unexpired pending requests or requests created within 24 hours. Cancelled requests retain their identity and count toward the creation limit. Creates an administrative request without changing Maintainerr. */
         post: operations["postExtensionRequest"];
         delete?: never;
         options?: never;
@@ -312,9 +312,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Configured administrator only; 100 oldest pending requests, including requester display name. */
+        /** @description Configured administrator only; 100 oldest unexpired pending requests, including requester display name. */
         get: operations["getAdminExtensionRequests"];
-        /** @description Configured administrator only, matching Origin. Records manual handling or refusal; does not modify Maintainerr. */
+        /** @description Configured administrator only, matching Origin. Records manual handling or refusal for an unexpired pending request; does not modify Maintainerr. A concurrent cancellation, review or expiry returns request_changed (409). */
         put: operations["reviewExtensionRequest"];
         post?: never;
         delete?: never;
@@ -704,6 +704,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/extension-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Owner only; matching Origin and current Plex authorization required. Cancels an unexpired pending request, retaining history and the 24-hour creation limit. A concurrent review, expiry or unavailable request returns request_changed (409). Does not modify Maintainerr. */
+        delete: operations["cancelExtensionRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -959,8 +976,11 @@ export interface components {
             estimatedAt: string;
             days: number;
             reason: string;
-            /** @enum {string} */
-            status: "pending" | "reviewed" | "declined";
+            /**
+             * @description Cancelled requests are retained. Expired is derived for a pending request whose estimated deadline has passed; it does not confirm media removal.
+             * @enum {string}
+             */
+            status: "pending" | "reviewed" | "declined" | "cancelled" | "expired";
             adminNote: string;
             /** Format: date-time */
             createdAt: string;
@@ -3182,6 +3202,37 @@ export interface operations {
                     "image/jpeg": string;
                     "image/png": string;
                     "image/webp": string;
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    cancelExtensionRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutationOK"];
                 };
             };
             /** @description Error with stable code and French message */
