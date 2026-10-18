@@ -59,6 +59,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Personal Seerr requests. An optional normalized status filters the complete list before pagination. Filtered reads scan at most 1000 requests within six seconds; an incomplete or changing source fails explicitly instead of returning a partial total. */
         get: operations["getRequests"];
         put?: never;
         post?: never;
@@ -1580,6 +1581,8 @@ export interface operations {
         parameters: {
             query?: {
                 offset?: number;
+                /** @description Filter across the owner’s requests, before pagination. Omit or use all for the ordinary unfiltered page. */
+                status?: "all" | "pending" | "approved" | "declined" | "processing" | "partial" | "available" | "unknown" | "error";
             };
             header?: never;
             path?: never;

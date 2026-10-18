@@ -16,7 +16,11 @@ async function api(page: Page, signedIn = false) {
     ] }
     else if (path.endsWith('/capabilities')) data = { version: 'test', discordLogin: true, plexLink: true, requests: true, recent: true, notifications: false, books: false, monitoring: false, subscriptions: false }
     else if (path.endsWith('/recent')) data = { items: [{ id: '1', title: 'Interstellar', type: 'movie', year: 2014, addedAt: '2026-10-15T12:00:00Z', url: 'https://app.plex.tv' }, { id: '2', title: 'Shōgun', type: 'show', year: 2024, addedAt: '2026-10-15T12:00:00Z' }] }
-    else if (path.endsWith('/requests')) data = { items: [{ id: 1, title: '<img src=x onerror=alert(1)>', type: 'movie', status: 'available', createdAt: '2026-10-15T12:00:00Z', mediaId: 123, seasons: [] }, { id: 2, title: 'Fallout', type: 'tv', status: 'processing', createdAt: '2026-10-14T12:00:00Z', mediaId: 22, seasons: [1] }], total: 2, offset: 0, limit: 10 }
+    else if (path.endsWith('/requests')) {
+      const filter = new URL(route.request().url()).searchParams.get('status')
+      const items = [{ id: 1, title: '<img src=x onerror=alert(1)>', type: 'movie', status: 'available', createdAt: '2026-10-15T12:00:00Z', mediaId: 123, seasons: [] }, { id: 2, title: 'Fallout', type: 'tv', status: 'processing', createdAt: '2026-10-14T12:00:00Z', mediaId: 22, seasons: [1] }].filter(item => !filter || item.status === filter)
+      data = { items, total: items.length, offset: 0, limit: 10 }
+    }
     else if (path.endsWith('/preferences')) { if (route.request().method() === 'PUT') preferences = route.request().postDataJSON().notifications; data = { notifications: preferences, notificationsAvailable: false, timezone: 'Europe/Paris' } }
     else if (path.endsWith('/auth/logout')) { signedIn = false; data = { ok: true } }
     await route.fulfill({ json: data })
