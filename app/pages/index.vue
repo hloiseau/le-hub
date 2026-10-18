@@ -61,8 +61,8 @@ const freshness = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyl
     <p v-if="updatedAt && !message" class="recent-freshness muted">Liste vérifiée le {{ freshness(updatedAt) }} · les épisodes d’une même série sont regroupés.</p>
   </section>
   <RecentBooks />
-  <section v-if="capabilities?.departures && !demo" class="section-block"><div class="section-heading"><div><span class="eyebrow">VOS LECTURES EN COURS</span><h2>À voir avant leur départ</h2></div></div><DepartureList compact /></section>
-  <div class="bottom-grid"><NuxtLink to="/avant-le-depart" class="feature-tile departure-tile"><span class="tile-icon"><HubIcon name="bell" /></span><div><span class="tag">{{ capabilities?.departures ? 'VOS LECTURES' : 'PROCHAINE PRIORITÉ' }}</span><h3>À voir avant leur départ</h3><p>Les départs estimés des contenus que vous avez commencé à regarder.</p></div><HubIcon name="arrow" /></NuxtLink><NuxtLink to="/aide" class="feature-tile"><span class="tile-icon"><HubIcon name="help" /></span><div><span class="eyebrow">UN PEU PERDU ?</span><h3>On vous guide</h3><p>Les services, les comptes et les bonnes habitudes.</p></div><HubIcon name="arrow" /></NuxtLink></div>
+  <section v-if="capabilities?.departures && !demo" class="section-block"><div class="section-heading"><div><span class="eyebrow">VOS DEMANDES, SUIVIS ET VISIONNAGES</span><h2>À voir avant leur départ</h2></div></div><DepartureList compact /></section>
+  <div class="bottom-grid"><NuxtLink to="/avant-le-depart" class="feature-tile departure-tile"><span class="tile-icon"><HubIcon name="bell" /></span><div><span class="tag">{{ capabilities?.departures ? 'VOS CONTENUS' : 'PROCHAINE PRIORITÉ' }}</span><h3>À voir avant leur départ</h3><p>Vos demandes, suivis et visionnages concernés par un départ estimé.</p></div><HubIcon name="arrow" /></NuxtLink><NuxtLink to="/aide" class="feature-tile"><span class="tile-icon"><HubIcon name="help" /></span><div><span class="eyebrow">UN PEU PERDU ?</span><h3>On vous guide</h3><p>Les services, les comptes et les bonnes habitudes.</p></div><HubIcon name="arrow" /></NuxtLink></div>
   </div>
 </template>
 <style scoped>

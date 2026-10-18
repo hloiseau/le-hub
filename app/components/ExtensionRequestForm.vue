@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ExtensionRequest } from '~/types/api'
-const props = defineProps<{ mediaId: string }>()
+const props = defineProps<{ mediaId: string, disabled: boolean }>()
 const { session, refresh } = useHub()
 const changes = useState('extension-requests-revision', () => 0)
 const open = ref(false)
@@ -13,7 +13,7 @@ let revision = 0
 watch(() => session.value.user?.plexId, () => { revision++; open.value = false; saved.value = false; reason.value = ''; error.value = '' })
 onBeforeUnmount(() => { revision++ })
 async function submit() {
-  if (busy.value || !session.value.user || !session.value.plexConnected) return
+  if (busy.value || props.disabled || !session.value.user || !session.value.plexConnected) return
   error.value = ''
   if (!Number.isInteger(days.value) || days.value < 1 || days.value > 30 || [...reason.value].length > 500) {
     error.value = 'Choisissez un délai de 1 à 30 jours et un motif de 500 caractères maximum.'
@@ -36,16 +36,16 @@ async function submit() {
   <div class="extension-form">
     <p v-if="saved" class="inline-notice" role="status">Demande enregistrée pour examen. Le délai et la conservation du contenu ne sont pas garantis.</p>
     <template v-else>
-      <button class="button secondary compact" :aria-expanded="open" :disabled="busy" @click="open = !open">{{ open ? 'Fermer la demande' : 'Demander un délai' }}</button>
+      <button class="button secondary compact" :aria-expanded="open" :disabled="busy || disabled" @click="open = !open">{{ open ? 'Fermer la demande' : 'Demander un délai' }}</button>
       <form v-if="open" novalidate @submit.prevent="submit">
         <p class="muted">Votre demande sera examinée par un administrateur. Elle ne modifie pas automatiquement la date de retrait.</p>
         <label :for="`extension-days-${mediaId}`">Délai souhaité en jours</label>
-        <input :id="`extension-days-${mediaId}`" v-model.number="days" type="number" min="1" max="30" step="1" :disabled="busy" />
+        <input :id="`extension-days-${mediaId}`" v-model.number="days" type="number" min="1" max="30" step="1" :disabled="busy || disabled" />
         <label :for="`extension-reason-${mediaId}`">Motif (facultatif)</label>
-        <textarea :id="`extension-reason-${mediaId}`" v-model="reason" maxlength="500" rows="3" :disabled="busy" placeholder="Par exemple : terminer cette saison ce week-end." />
+        <textarea :id="`extension-reason-${mediaId}`" v-model="reason" maxlength="500" rows="3" :disabled="busy || disabled" placeholder="Par exemple : terminer cette saison ce week-end." />
         <p class="muted">500 caractères maximum. Votre motif sera visible par les administrateurs.</p>
         <p v-if="error" class="inline-notice error" role="alert">{{ error }}</p>
-        <button class="button secondary compact" :disabled="busy" type="submit">{{ busy ? 'Enregistrement…' : 'Envoyer ma demande' }}</button>
+        <button class="button secondary compact" :disabled="busy || disabled" type="submit">{{ busy ? 'Enregistrement…' : 'Envoyer ma demande' }}</button>
       </form>
     </template>
   </div>

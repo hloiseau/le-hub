@@ -3,6 +3,10 @@ import { test, expect, type Page } from '@playwright/test'
 function request() {
   return { id: 1, mediaId: '1', title: 'Une série à terminer', type: 'show', url: 'https://app.plex.tv/desktop/#!/server/fixture/details?key=%2Flibrary%2Fmetadata%2F1', estimatedAt: new Date(Date.now() + 7 * 86400_000).toISOString(), days: 7, reason: 'Un peu de temps', status: 'pending', adminNote: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), requester: 'Alice' }
 }
+function departurePage() {
+  const item = request()
+  return { scope: 'personal_interest', updatedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 3_600_000).toISOString(), items: [{ id: item.mediaId, title: item.title, type: item.type, watch: 'unknown', estimatedAt: item.estimatedAt, url: item.url }] }
+}
 async function signedIn(page: Page, admin = false, enabled = true) {
   const state = { signed: true, admin }
   await page.route('**/api/v1/**', route => {
@@ -150,4 +154,99 @@ test('disabled extension capability keeps requests hidden', async ({ page }) => 
   await expect(page.getByRole('button', { name: 'Demander un délai', exact: true })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Mes demandes de délai' })).toHaveCount(0)
   expect(calls).toBe(0)
+})
+
+test('automatic fresh verification preserves an open delay draft while disabling stale actions', async ({ page }) => {
+  await page.clock.install()
+  await signedIn(page)
+  let reads = 0; let release!: () => void
+  const pending = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/v1/departures', async route => {
+    if (++reads === 2) await pending
+    return route.fulfill({ json: departurePage() })
+  })
+  await page.goto('/avant-le-depart')
+  await page.getByRole('button', { name: 'Demander un délai', exact: true }).click()
+  await page.getByLabel('Délai souhaité en jours').fill('12')
+  await page.getByLabel('Motif (facultatif)').fill('Terminer cette saison pendant les vacances.')
+  await page.clock.fastForward(60_001)
+  await expect.poll(() => reads).toBe(2)
+  await expect(page.locator('.departure-row')).toBeHidden()
+  await expect(page.getByLabel('Motif (facultatif)')).toBeDisabled()
+  await expect(page.locator('.extension-form button[type=submit]')).toBeDisabled()
+  release()
+  await expect(page.locator('.departure-row')).toBeVisible()
+  await expect(page.getByLabel('Motif (facultatif)')).toHaveValue('Terminer cette saison pendant les vacances.')
+  await expect(page.getByLabel('Délai souhaité en jours')).toHaveValue('12')
+  await expect(page.getByRole('button', { name: 'Envoyer ma demande' })).toBeEnabled()
+})
+
+for (const outcome of ['success', 'error']) test(`an in-flight delay submission keeps its ${outcome} across fresh verification`, async ({ page }) => {
+  await signedIn(page)
+  let reads = 0; let writes = 0; let submitted = false
+  let releaseRead!: () => void; let releaseWrite!: () => void
+  const pendingRead = new Promise<void>(resolve => { releaseRead = resolve })
+  const pendingWrite = new Promise<void>(resolve => { releaseWrite = resolve })
+  await page.route('**/api/v1/departures', async route => {
+    if (++reads === 2) await pendingRead
+    return route.fulfill({ json: departurePage() })
+  })
+  await page.route('**/api/v1/extension-requests', async route => {
+    if (route.request().method() !== 'POST') return route.fulfill({ json: { items: submitted ? [request()] : [] } })
+    writes++; await pendingWrite
+    submitted = outcome === 'success'
+    return route.fulfill(submitted ? { json: request() } : { status: 503, json: { error: { message: 'Enregistrement temporairement indisponible.' } } })
+  })
+  await page.goto('/avant-le-depart')
+  await page.getByRole('button', { name: 'Demander un délai', exact: true }).click()
+  await page.getByLabel('Motif (facultatif)').fill('Finir le dernier épisode.')
+  await page.getByRole('button', { name: 'Envoyer ma demande' }).click()
+  await expect.poll(() => writes).toBe(1)
+  await page.getByRole('button', { name: 'Actualiser', exact: true }).click()
+  await expect(page.locator('.departure-row')).toBeHidden()
+  releaseRead()
+  await expect(page.locator('.departure-row')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Enregistrement…', exact: true })).toBeDisabled()
+  releaseWrite()
+  if (outcome === 'success') {
+    await expect(page.locator('.extension-form [role=status]')).toContainText('Demande enregistrée pour examen.')
+    await expect(page.locator('.extension-row')).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'Envoyer ma demande' })).toHaveCount(0)
+  } else {
+    await expect(page.locator('.extension-form [role=alert]')).toContainText('Enregistrement temporairement indisponible.')
+    await expect(page.getByLabel('Motif (facultatif)')).toHaveValue('Finir le dernier épisode.')
+    await expect(page.getByRole('button', { name: 'Envoyer ma demande' })).toBeEnabled()
+  }
+  expect(writes).toBe(1)
+})
+
+for (const invalidation of ['removed', 'source error', 'access revoked']) test(`a ${invalidation} clears the delay form and ignores a late submission response`, async ({ page }) => {
+  const state = await signedIn(page)
+  let reads = 0; let writes = 0; let release!: () => void
+  const pending = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/v1/departures', route => {
+    if (++reads !== 2) return route.fulfill({ json: departurePage() })
+    if (invalidation === 'removed') return route.fulfill({ json: { ...departurePage(), items: [] } })
+    if (invalidation === 'access revoked') state.signed = false
+    return route.fulfill({ status: invalidation === 'access revoked' ? 403 : 503, json: { error: { message: 'Départ non vérifiable.' } } })
+  })
+  await page.route('**/api/v1/extension-requests', async route => {
+    if (route.request().method() !== 'POST') return route.fulfill({ json: { items: [] } })
+    writes++; await pending; return route.fulfill({ json: request() })
+  })
+  await page.goto('/avant-le-depart')
+  await page.getByRole('button', { name: 'Demander un délai', exact: true }).click()
+  await page.getByLabel('Motif (facultatif)').fill('Brouillon devenu caduc.')
+  await page.getByRole('button', { name: 'Envoyer ma demande' }).click()
+  await expect.poll(() => writes).toBe(1)
+  await page.getByRole('button', { name: 'Actualiser', exact: true }).click()
+  await expect(page.locator('.extension-form')).toHaveCount(0)
+  release()
+  await expect(page.getByText('Demande enregistrée pour examen.', { exact: false })).toHaveCount(0)
+  if (invalidation !== 'access revoked') {
+    await page.getByRole('button', { name: 'Actualiser', exact: true }).click()
+    await page.getByRole('button', { name: 'Demander un délai', exact: true }).click()
+    await expect(page.getByLabel('Motif (facultatif)')).toHaveValue('')
+  }
+  expect(writes).toBe(1)
 })
