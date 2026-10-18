@@ -65,10 +65,41 @@ test('administrator details are opt in, escaped and expire with the aggregate vi
   expect(counts.admin).toBe(0)
   await page.getByRole('checkbox', { name: 'Afficher les sessions et les équipements' }).check()
   await expect(page.locator('.session-row')).toContainText('PRIVATE TITLE')
+  await expect(page.locator('.session-decisions')).toHaveCount(0)
   await expect(page.locator('.session-row img')).toHaveCount(0)
   await expect(page.locator('.host-row')).toContainText('PRIVATE POOL')
   await expect(page.locator('.session-row')).toHaveCount(0, { timeout: 8000 })
   await expect(page.locator('[data-metric="cpu_percent"] dd')).toHaveText('Donnée périmée')
+})
+
+test('admin distinguishes audio-only transcoding from video decisions without inferring GPU activity', async ({ page }, testInfo) => {
+  await routes(page, { admin: true })
+  await page.route('**/api/v1/monitoring', route => route.fulfill({ json: {
+    ...snapshot(), toparrStatus: 'available', toparrUpdatedAt: new Date().toISOString(),
+    metrics: { ...snapshot().metrics, gpu_video_percent: observed(0) },
+  } }))
+  await page.route('**/api/v1/admin/plex-activity', route => route.fulfill({ json: {
+    ...snapshot(), hostDetails: [], sessions: [
+      { user: 'Compte de test', title: 'Audio seul', state: 'playing', decision: 'transcode', videoDecision: 'copy', audioDecision: 'transcode', videoCodec: 'hevc', audioCodec: 'aac', hardwareDecoding: false, hardwareEncoding: false },
+      { user: 'Compte de test', title: 'Vidéo seule', state: 'playing', decision: 'transcode', videoDecision: 'transcode', audioDecision: 'copy', hardwareDecoding: true, hardwareEncoding: true },
+      { user: 'Compte de test', title: 'Audio connu seulement', state: 'playing', decision: 'direct play', audioDecision: 'direct play', hardwareDecoding: null, hardwareEncoding: null },
+    ],
+  } }))
+  await page.goto('/performances')
+  await expect(page.locator('.session-decisions')).toHaveCount(0)
+  await page.getByRole('checkbox', { name: 'Afficher les sessions et les équipements' }).check()
+  const rows = page.locator('.session-row')
+  await expect(rows).toHaveCount(3)
+  await expect(rows.nth(0).locator('.session-decisions')).toHaveText('Vidéo : Copie sans réencodage · Audio : Transcodage')
+  await expect(rows.nth(0)).toContainText('Décodage matériel : Non · Encodage matériel : Non')
+  await expect(rows.nth(1).locator('.session-decisions')).toHaveText('Vidéo : Transcodage · Audio : Copie sans réencodage')
+  await expect(rows.nth(2).locator('.session-decisions')).toHaveText('Audio : Lecture directe')
+  await expect(page.locator('[data-metric="gpu_video_percent"] dd')).toHaveText('0 %')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.screenshot({ path: testInfo.outputPath('monitoring-stream-decisions.png'), fullPage: true })
+  await page.getByRole('checkbox', { name: 'Afficher les sessions et les équipements' }).uncheck()
+  await expect(page.locator('.session-decisions')).toHaveCount(0)
 })
 
 test('monitoring polling pauses while hidden and failures withdraw current observations', async ({ page }) => {
