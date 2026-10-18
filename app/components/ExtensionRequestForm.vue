@@ -8,9 +8,17 @@ const days = ref(7)
 const reason = ref('')
 const busy = ref(false)
 const error = ref('')
-const saved = ref(false)
+const saved = ref<ExtensionRequest['status'] | null>(null)
+const savedMessage = computed(() => saved.value && {
+  pending: 'Demande enregistrée pour examen. Le délai et la conservation du contenu ne sont pas garantis.',
+  reviewed: 'Cette demande a déjà été examinée. Consultez la réponse dans Mes demandes de délai ; la conservation du contenu n’est pas garantie.',
+  declined: 'Cette demande a été refusée. Consultez la réponse dans Mes demandes de délai.',
+  cancelled: 'Cette demande a été annulée. Elle n’est plus en attente d’examen.',
+  expired: 'L’échéance de cette demande est passée. Cela ne confirme pas la suppression du contenu.',
+}[saved.value])
 let revision = 0
-watch(() => session.value.user?.plexId, () => { revision++; open.value = false; saved.value = false; reason.value = ''; error.value = '' })
+watch([() => session.value.user?.plexId, () => session.value.plexConnected, () => props.mediaId], () => { revision++; open.value = false; saved.value = null; reason.value = ''; error.value = ''; busy.value = false }, { flush: 'sync' })
+watch(changes, () => { saved.value = null }, { flush: 'sync' })
 onBeforeUnmount(() => { revision++ })
 async function submit() {
   if (busy.value || props.disabled || !session.value.user || !session.value.plexConnected) return
@@ -22,9 +30,9 @@ async function submit() {
   const current = ++revision
   busy.value = true
   try {
-    await $fetch<ExtensionRequest>('/api/v1/extension-requests', { method: 'POST', retry: 0, body: { mediaId: props.mediaId, days: days.value, reason: reason.value.trim() } })
+    const result = await $fetch<ExtensionRequest>('/api/v1/extension-requests', { method: 'POST', retry: 0, body: { mediaId: props.mediaId, days: days.value, reason: reason.value.trim() } })
     if (current !== revision) return
-    saved.value = true; open.value = false; reason.value = ''; changes.value++
+    changes.value++; saved.value = result.status; open.value = false; reason.value = ''
   } catch (e) {
     if (current !== revision) return
     error.value = apiMessage(e)
@@ -34,7 +42,7 @@ async function submit() {
 </script>
 <template>
   <div class="extension-form">
-    <p v-if="saved" class="inline-notice" role="status">Demande enregistrée pour examen. Le délai et la conservation du contenu ne sont pas garantis.</p>
+    <p v-if="saved" class="inline-notice" role="status">{{ savedMessage }}</p>
     <template v-else>
       <button class="button secondary compact" :aria-expanded="open" :disabled="busy || disabled" @click="open = !open">{{ open ? 'Fermer la demande' : 'Demander un délai' }}</button>
       <form v-if="open" novalidate @submit.prevent="submit">
