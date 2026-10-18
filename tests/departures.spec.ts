@@ -22,12 +22,16 @@ function departurePage() {
 test('personal departures show uncertainty, safely render titles and refresh removals', async ({ page }, testInfo) => {
   await signedIn(page)
   let empty = false
-  await page.route('**/api/v1/departures', route => { const data = departurePage(); if (empty) data.items = []; return route.fulfill({ json: data }) })
+  await page.route('**/api/v1/departures', route => { const data = departurePage(); data.scope = 'personal_interest'; data.items[0]!.watch = 'unstarted'; if (empty) data.items = []; return route.fulfill({ json: data }) })
   await page.goto('/avant-le-depart')
   await expect(page.locator('.departure-row')).toHaveCount(2)
   await expect(page.getByRole('heading', { name: '<img src=x onerror=alert(1)>' })).toBeVisible()
   await expect(page.locator('.departure-list img')).toHaveCount(0)
   await expect(page.getByText('Saison · Visionnage incertain')).toBeVisible()
+  await expect(page.getByText('Film · Marqué non vu dans Plex')).toBeVisible()
+  await expect(page.locator('.page-heading')).toContainText('vos demandes, suivis et visionnages')
+  await expect(page.locator('.editorial-panel')).toContainText('Une demande ou un suivi peut apparaître même si vous n’avez pas commencé à regarder.')
+  await expect(page.getByText('Les demandes jamais lancées et les suivis ne sont pas encore inclus.', { exact: false })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Voir dans Plex' }).first()).toHaveAttribute('href', /^https:\/\/app\.plex\.tv\//)
   await page.getByRole('checkbox', { name: 'Inclure les contenus terminés' }).check()
   await expect(page.locator('.departure-row')).toHaveCount(3)
@@ -36,7 +40,7 @@ test('personal departures show uncertainty, safely render titles and refresh rem
   empty = true
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click()
   await expect(page.locator('.departure-row')).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: 'Aucun départ à reprendre confirmé' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Aucun départ confirmé' })).toBeVisible()
 })
 
 test('source failure clears previously visible departures and retry recovers', async ({ page }) => {
@@ -77,6 +81,7 @@ test('home includes personal departures and expired results are withdrawn', asyn
     return route.fulfill({ json: data })
   })
   await page.goto('/')
+  await expect(page.locator('.departure-tile')).toContainText('Vos demandes, suivis et visionnages concernés par un départ estimé.')
   await expect(page.locator('.departure-row')).toHaveCount(2)
   await expect(page.getByRole('link', { name: 'Voir mes départs' })).toBeVisible()
   await expect(page.getByRole('alert')).toContainText('Actualisation indisponible', { timeout: 10_000 })

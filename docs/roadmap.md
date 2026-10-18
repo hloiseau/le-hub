@@ -2,6 +2,8 @@
 
 16 issues de développement, dont la priorité « Avant leur départ ». Le statut actuel est celui de chaque issue GitHub ; cette page organise le périmètre, sans échéances promises.
 
+Priorité confirmée le 18 octobre : films/séries, notifications Discord et fiabilité du Hub d'abord. Les livres, utilisés uniquement par l'administrateur, passent en dernier. Le travail de correspondance des demandes avec le catalogue reste conservé localement, sans déploiement. Les phases ci-dessous gardent leur numérotation historique.
+
 Les dépendances sont des liens vers les issues des deux dépôts. Les références Cxx/Hxx permettent de relier le découpage initial aux numéros GitHub.
 
 ## Avancement au 18 octobre 2026
@@ -12,7 +14,7 @@ Les [PR Hub #32](https://github.com/hloiseau/le-hub/pull/32) et [Concierge #44](
 
 Les images installées Grimmory v3.5.0 et Shelfmark v1.4.0 correspondent aux sources auditées. Les routes personnelles refusent les lectures anonymes ; connexion OPDS/Shelfmark et isolation entre deux comptes restent non validées. Les imports Grimmory restent explicitement non vérifiés sans corrélation amont ; aucune liste de tomes manquants ou de nouvelles sorties n’est inventée. Le statut Kobo n’est pas simulé. Le contrat personnel Downloadarr est fusionné dans la [PR amont #1](https://github.com/hloiseau/LibraryDownloadarr/pull/1), publié sur `quality-preview` et son fonctionnement confirmé par l’administrateur après installation. La recette à deux comptes et des transferts longs reste ouverte. Les publications communautaires nécessitent encore la sélection et l’exporteur. Les pages effacent les données expirées, révoquées et les réponses tardives après déconnexion.
 
-Le collecteur hôte fonctionne chaque minute sur le NAS. Douze clés hôte/Plex ont été vérifiées disponibles dans deux échantillons successifs de l’historique SQLite : CPU, température, charge, RAM, réseau, stockage et activité Plex. La collecte couvre les cinq disques du pool, sans les disques de démarrage, et sa capacité ZFS ; elle n’a reçu aucun privilège supplémentaire et l’API lit son dossier sans pouvoir y écrire. Le raccordement GPU réutilise l’API Toparr existante ; son client a été vérifié sur l’Arc A310 et le Hub distingue la fraîcheur de cette source des autres mesures. Le rendu sous charge réelle reste à recetter. Les droits personnels, la réception des rappels et les bibliothèques de deux comptes réels ne sont pas validés par ces contrôles d’exploitation.
+Le collecteur hôte fonctionne chaque minute sur le NAS. Quatorze clés hôte/Plex/GPU ont été vérifiées disponibles dans l’historique SQLite : CPU, température, charge, RAM, réseau, stockage, activité Plex, puissance et fréquence GPU. La collecte couvre les cinq disques du pool, sans les disques de démarrage, et sa capacité ZFS ; elle n’a reçu aucun privilège supplémentaire et l’API lit son dossier sans pouvoir y écrire. Le raccordement GPU est déployé et réutilise l’API Toparr existante sur l’Arc A310 ; le Hub distingue la fraîcheur de cette source des autres mesures. Le rendu sous charge réelle reste à recetter. Les droits personnels, la réception des rappels et les bibliothèques de deux comptes réels ne sont pas validés par ces contrôles d’exploitation.
 
 ## Phase 2 — Portail V0 / V1
 
