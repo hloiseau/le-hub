@@ -41,30 +41,21 @@ test('Seerr requests are followed automatically without adding IDs or creating s
   await page.screenshot({ path: testInfo.outputPath('automatic-following.png'), fullPage: true })
 })
 
-test('old follows route redirects to the single requests page and account links to its settings', async ({ page }) => {
+test('requests keep content while account owns notification settings and old anchors redirect', async ({ page }) => {
   await signedIn(page, true, true)
-  let requestReads = 0
-  let preferenceReads = 0
-  await page.route('**/api/v1/requests?*', route => { requestReads++; return route.fulfill({ json: list([request]) }) })
-  await page.route('**/api/v1/reminders/preferences', route => { preferenceReads++; return route.fulfill({ json: { enabled: true, discordDmEnabled: true, allUnwatched: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10 } }) })
+  await page.route('**/api/v1/requests?*', route => route.fulfill({ json: list([request]) }))
   await page.goto('/suivis')
   await expect(page).toHaveURL(/\/demandes$/)
   await expect(page.locator('.request-row')).toHaveCount(1)
-  await expect(page.getByRole('heading', { name: 'Mes notifications' })).toHaveCount(1)
-  await expect(page.getByRole('navigation').getByRole('link', { name: 'Mes suivis', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).toBeChecked()
-  expect(requestReads).toBe(1)
-  expect(preferenceReads).toBe(1)
-  await page.goto('/compte#rappels')
   await expect(page.getByRole('checkbox')).toHaveCount(0)
-  const settings = page.getByRole('link', { name: 'Régler mes notifications' })
-  await expect(settings).toHaveAttribute('href', '/demandes#rappels')
-  await settings.click()
-  await expect(page).toHaveURL(/\/demandes#rappels$/)
+  await page.getByRole('link', { name: 'Régler mes notifications', exact: true }).click()
+  await expect(page).toHaveURL(/\/compte#rappels$/)
   await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).toBeChecked()
+  await page.goto('/demandes#rappels')
+  await expect(page).toHaveURL(/\/compte#rappels$/)
 })
 
-test('saving personal consent updates legacy channel choices on the same page', async ({ page }) => {
+test('saved consent in account is rechecked when returning to subscriptions', async ({ page }) => {
   await signedIn(page, true, true)
   let preferences = { enabled: false, discordDmEnabled: false, allUnwatched: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10 }
   await page.route('**/api/v1/subscriptions?*', route => route.fulfill({ json: list([item]) }))
@@ -75,12 +66,16 @@ test('saving personal consent updates legacy channel choices on the same page', 
   await page.goto('/demandes')
   const discordChoice = page.getByLabel('Canal pour Le film partagé').locator('option[value="discord"]')
   await expect(discordChoice).toHaveJSProperty('disabled', true)
+  await page.goto('/compte#rappels')
   await page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' }).check()
-  await expect(discordChoice).toHaveJSProperty('disabled', true)
+  expect(preferences.discordDmEnabled).toBe(false)
   await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await page.goto('/demandes')
   await expect(discordChoice).toHaveJSProperty('disabled', false)
+  await page.goto('/compte#rappels')
   await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).uncheck()
   await page.getByRole('button', { name: 'Enregistrer mes rappels' }).click()
+  await page.goto('/demandes')
   await expect(discordChoice).toHaveJSProperty('disabled', true)
 })
 
@@ -89,7 +84,7 @@ test('channel reminders remain explained without personal notification settings'
   await page.route('**/api/v1/capabilities', route => route.fulfill({ json: { requests: true, discordChannelReminders: true, notifications: false, subscriptions: false, plexLink: true } }))
   let preferenceReads = 0
   await page.route('**/api/v1/reminders/preferences', route => { preferenceReads++; return route.fulfill({ status: 503 }) })
-  await page.goto('/demandes')
+  await page.goto('/compte#rappels')
   await expect(page.getByText('Ces annonces sont automatiques', { exact: false })).toBeVisible()
   await expect(page.getByRole('checkbox')).toHaveCount(0)
   expect(preferenceReads).toBe(0)
@@ -195,7 +190,7 @@ test('private Discord follow delivery still requires personal consent', async ({
   await page.route('**/api/v1/reminders/preferences', route => route.fulfill({ json: { enabled: false, discordDmEnabled: false, allUnwatched: false, daysBefore: [7, 2], quietStartHour: 22, quietEndHour: 8, dailyCap: 10 } }))
   await page.goto('/demandes')
   await expect(page.getByLabel('Canal pour Le film partagé').locator('option[value="discord"]')).toHaveJSProperty('disabled', true)
-  await expect(page.getByText('Activez vos notifications ci-dessus', { exact: false })).toBeVisible()
+  await expect(page.getByText('Activez vos notifications dans Mon compte', { exact: false })).toBeVisible()
 })
 
 test('availability inbox withdraws old content on errors and after unsubscribe', async ({ page }) => {

@@ -84,7 +84,7 @@ onBeforeUnmount(() => { revision++ })
       </fieldset>
     </form>
     <div v-if="enabled" class="quiet-note"><HubIcon name="bell" /><p>Vos rappels personnels nécessitent une session Plex active. Après un redémarrage du Concierge, reconnectez-vous. Un état de visionnage incertain ne déclenche aucun rappel personnel. Les annonces du salon notifications fonctionnent indépendamment de votre session.</p></div>
-    <NuxtLink v-if="capabilities?.departures" to="/avant-le-depart#reminders-heading" class="text-button">Consulter mes rappels</NuxtLink>
+    <NuxtLink v-if="capabilities?.departures" to="/retraits#reminders-heading" class="text-button">Consulter mes rappels</NuxtLink>
   </section>
 </template>
 <style scoped>

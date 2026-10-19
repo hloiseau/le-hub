@@ -26,6 +26,7 @@ test('collections retain different editions, fractional numbers and source uncer
   await expect(page.locator('.collection-book').first()).toContainText('1.5')
   await expect(page.locator('.collection-book').last()).toContainText('HS')
   await expect(page.locator('.collection-book').last()).toContainText('en')
+  await page.locator('.contextual-help summary').click()
   await expect(page.getByText('Les manques et dates de sortie restent donc inconnus', { exact: false })).toBeVisible()
   await expect(page.getByText('Source : Grimmory OPDS', { exact: false })).toBeVisible()
   await page.getByRole('button', { name: 'Voir cette série' }).click()
@@ -51,7 +52,7 @@ test('empty filtered pages keep pagination and an access error withdraws old col
   await page.getByRole('button', { name: 'Actualiser les collections' }).click()
   await expect(page.getByRole('alert')).toContainText('Reliez vos identifiants OPDS')
   await expect(page.locator('.collection-book')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Gérer mon accès et mes livres' })).toHaveAttribute('href', '/livres')
+  await expect(page.getByRole('navigation', { name: 'Livres', exact: true }).getByRole('link', { name: 'Catalogue', exact: true })).toHaveAttribute('href', '/livres')
 })
 
 test('Kobo guide links the real integration without pretending to know sync state', async ({ page }) => {

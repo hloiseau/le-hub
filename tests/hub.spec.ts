@@ -4,6 +4,7 @@ async function api(page: Page, signedIn = false) {
   let preferences = false
   await page.route('**/api/v1/**', async route => {
     const path = new URL(route.request().url()).pathname
+    if (path.includes('/monitoring')) return route.fulfill({ status: 503, json: { error: { message: 'Collecteur indisponible.' } } })
     let data: unknown = {}
     if (path.endsWith('/session')) data = signedIn ? { user: { discordId: '12345', name: 'Alex', plexId: '1', seerrId: 42, notifications: preferences }, plexConnected: true } : { user: null }
     else if (path.endsWith('/services')) data = { items: [
@@ -14,7 +15,7 @@ async function api(page: Page, signedIn = false) {
       { id: 'shelfmark', name: 'Shelfmark', description: 'Demander une lecture', category: 'read' },
       { id: 'grimmory', name: 'Grimmory', description: 'Livres et mangas', category: 'read' },
     ] }
-    else if (path.endsWith('/capabilities')) data = { version: 'test', discordLogin: true, plexLink: true, requests: true, recent: true, notifications: false, books: false, monitoring: false, subscriptions: false }
+    else if (path.endsWith('/capabilities')) data = { version: 'test', discordLogin: true, plexLink: true, requests: true, recent: true, departures: true, monitoring: true, notifications: false, books: false, subscriptions: false }
     else if (path.endsWith('/recent')) data = { items: [{ id: '1', title: 'Interstellar', type: 'movie', year: 2014, addedAt: '2026-10-15T12:00:00Z', url: 'https://app.plex.tv' }, { id: '2', title: 'Shōgun', type: 'show', year: 2024, addedAt: '2026-10-15T12:00:00Z' }] }
     else if (path.endsWith('/requests')) {
       const filter = new URL(route.request().url()).searchParams.get('status')
@@ -32,9 +33,9 @@ test('authenticated home and service filters', async ({ page }, testInfo) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Accueil' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Interstellar' })).toBeVisible()
-  await page.getByRole('button', { name: 'Lire', exact: true }).click()
   await expect(page.locator('.services-grid .service-card')).toHaveCount(2)
-  await expect(page.locator('.services-grid')).toContainText('Grimmory')
+  await expect(page.locator('.services-grid')).toContainText('Plex')
+  await expect(page.locator('.services-grid')).not.toContainText('Grimmory')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: testInfo.outputPath('home.png'), fullPage: true })
@@ -56,8 +57,9 @@ test('unconfigured notifications do not offer a second preference form', async (
   await expect(page.getByText('Les notifications ne sont pas activées sur ce serveur.')).toBeVisible()
   await expect(page.getByRole('checkbox')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Enregistrer ma préférence' })).toHaveCount(0)
-  await page.goto('/avant-le-depart')
-  await expect(page.getByRole('heading', { name: 'Avant leur départ.' })).toBeVisible()
+  await page.route('**/api/v1/capabilities', route => route.fulfill({ json: {} }))
+  await page.goto('/retraits')
+  await expect(page.getByRole('heading', { name: 'Retraits prévus' })).toBeVisible()
   await expect(page.getByText('Cette intégration n’est pas encore active.', { exact: false })).toBeVisible()
 })
 test('upstream failure is explained and retry works', async ({ page }) => {
@@ -75,9 +77,8 @@ test('navigation reaches the dedicated monitoring page on small screens', async 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Interstellar' })).toBeVisible()
   if (isMobile) await page.getByRole('button', { name: 'Ouvrir la navigation' }).click()
-  await page.getByRole('link', { name: 'Le serveur', exact: true }).click()
-  await page.getByRole('link', { name: 'Consulter les performances' }).click()
-  await expect(page.getByRole('heading', { name: 'Les mesures ne sont pas activées' })).toBeVisible()
+  await page.getByRole('link', { name: 'Performances', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Performances', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
 })
 
@@ -85,7 +86,7 @@ test('departure navigation is direct and the mobile drawer supports keyboard dis
   await api(page, true)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Accueil', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Délais à examiner' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Demandes de report' })).toHaveCount(0)
   if (isMobile) {
     await expect(page.locator('#sidebar')).toHaveAttribute('inert', '')
     const toggle = page.getByRole('button', { name: 'Ouvrir la navigation' })
@@ -96,9 +97,9 @@ test('departure navigation is direct and the mobile drawer supports keyboard dis
     await expect(page.locator('#sidebar')).toHaveAttribute('inert', '')
     await toggle.click()
   }
-  await page.getByRole('navigation').getByRole('link', { name: 'Avant leur départ', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Avant leur départ.' })).toBeVisible()
-  await expect(page.locator('.breadcrumb')).toContainText('Avant leur départ')
+  await page.getByRole('navigation').getByRole('link', { name: 'Retraits prévus', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Retraits prévus' })).toBeVisible()
+  await expect(page.locator('.breadcrumb')).toContainText('Retraits prévus')
   if (isMobile) await expect(page.locator('#sidebar')).toHaveAttribute('inert', '')
 })
 
@@ -124,7 +125,7 @@ test('all portal routes stay behind the Plex gate without private requests', asy
   await api(page)
   const privateRequests: string[] = []
   page.on('request', r => { if (/\/api\/v1\/(services|requests|recent|preferences|departures)/.test(r.url())) privateRequests.push(r.url()) })
-  for (const route of ['/', '/demandes', '/suivis', '/bibliotheque', '/serveur', '/compte', '/aide', '/avant-le-depart']) {
+  for (const route of ['/', '/demandes', '/suivis', '/bibliotheque', '/serveur', '/compte', '/aide', '/retraits']) {
     await page.goto(route)
     await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
     await expect(page.getByRole('navigation')).toHaveCount(0)

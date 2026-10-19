@@ -23,14 +23,15 @@ test('personal departures show uncertainty, safely render titles and refresh rem
   await signedIn(page)
   let empty = false
   await page.route('**/api/v1/departures', route => { const data = departurePage(); data.scope = 'personal_interest'; data.items[0]!.watch = 'unstarted'; if (empty) data.items = []; return route.fulfill({ json: data }) })
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect(page.locator('.departure-row:visible')).toHaveCount(2)
   await expect(page.getByRole('heading', { name: '<img src=x onerror=alert(1)>' })).toBeVisible()
   await expect(page.locator('.departure-list img')).toHaveCount(0)
   await expect(page.getByText('Saison · Visionnage incertain')).toBeVisible()
   await expect(page.getByText('Film · Marqué non vu dans Plex')).toBeVisible()
-  await expect(page.locator('.page-heading')).toContainText('vos demandes, suivis et visionnages')
-  await expect(page.locator('.editorial-panel')).toContainText('Une demande ou un suivi peut apparaître même si vous n’avez pas commencé à regarder.')
+  await expect(page.locator('.departure-toolbar')).toContainText('Vos demandes, suivis et lectures')
+  await page.locator('.contextual-help summary').click()
+  await expect(page.locator('.contextual-help')).toContainText('Une demande ou un suivi peut apparaître même si vous n’avez pas commencé à regarder.')
   await expect(page.getByText('Les demandes jamais lancées et les suivis ne sont pas encore inclus.', { exact: false })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Voir dans Plex' }).first()).toHaveAttribute('href', /^https:\/\/app\.plex\.tv\//)
   await page.getByRole('checkbox', { name: 'Inclure les contenus terminés' }).check()
@@ -40,14 +41,14 @@ test('personal departures show uncertainty, safely render titles and refresh rem
   empty = true
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click()
   await expect(page.locator('.departure-row')).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: 'Aucun départ confirmé' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Aucun retrait dans votre sélection' })).toBeVisible()
 })
 
 test('source failure clears previously visible departures and retry recovers', async ({ page }) => {
   await signedIn(page)
   let failed = false
   await page.route('**/api/v1/departures', route => route.fulfill(failed ? { status: 503, json: { error: { message: 'Sources indisponibles.' } } } : { json: departurePage() }))
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect(page.locator('.departure-row:visible')).toHaveCount(2)
   failed = true
   await page.getByRole('button', { name: 'Actualiser', exact: true }).click()
@@ -64,7 +65,7 @@ test('an in-flight response cannot restore a private list after logout', async (
   const pending = new Promise<void>(resolve => { release = resolve })
   let requested = false
   await page.route('**/api/v1/departures', async route => { requested = true; await pending; await route.fulfill({ json: departurePage() }) })
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect.poll(() => requested).toBe(true)
   await page.getByRole('button', { name: 'Déconnexion' }).click()
   release()
@@ -81,9 +82,9 @@ test('home includes personal departures and expired results are withdrawn', asyn
     return route.fulfill({ json: data })
   })
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'À voir avant leur départ', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Retraits prévus', exact: true })).toBeVisible()
   await expect(page.locator('.departure-row:visible')).toHaveCount(2)
-  await expect(page.getByRole('link', { name: 'Voir mes départs' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Voir les retraits prévus' })).toBeVisible()
   await expect(page.getByRole('alert')).toContainText('Actualisation indisponible', { timeout: 10_000 })
   await expect(page.locator('.departure-row')).toHaveCount(0)
 })
@@ -101,7 +102,7 @@ test('departure filters combine title, media type and deadline without reorderin
     ]
     return route.fulfill({ json: data })
   })
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect(page.locator('.departure-row:visible h3')).toHaveText(['Été sur Mars', 'Été — Saison 1', 'Été — Épisode 2', 'Autre série'])
   await expect(page.locator('.departure-count')).toHaveText('4 contenu(s) affiché(s) sur 5 départ(s) confirmé(s).')
   await page.getByRole('searchbox', { name: 'Rechercher un titre' }).fill('ETE')
@@ -137,9 +138,9 @@ test('filtering preserves a delay draft, its pending submission and its confirme
     writes++; await pending
     return route.fulfill({ json: { status: 'pending' } })
   })
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   const season = page.locator('.departure-row').filter({ has: page.getByRole('heading', { name: 'Une saison à retrouver', exact: true, includeHidden: true }) })
-  await season.getByRole('button', { name: 'Demander un délai', exact: true }).click()
+  await season.getByRole('button', { name: 'Demander un report', exact: true }).click()
   await season.getByLabel('Délai souhaité en jours').fill('12')
   await season.getByLabel('Motif (facultatif)').fill('Terminer cette saison.')
   await page.getByLabel('Type de contenu', { exact: true }).selectOption('movie')

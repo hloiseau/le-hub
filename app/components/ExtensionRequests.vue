@@ -13,7 +13,7 @@ const error = ref('')
 const success = ref('')
 const enabled = computed(() => !demo.value && capabilities.value?.extensionRequests === true && (!props.admin || session.value.admin === true))
 const endpoint = computed(() => props.admin ? '/api/v1/admin/extension-requests' : '/api/v1/extension-requests')
-const heading = computed(() => props.admin ? 'Demandes à examiner' : 'Mes demandes de délai')
+const heading = computed(() => props.admin ? 'En attente' : 'Mes demandes de report')
 const headingID = computed(() => props.admin ? 'extension-admin-heading' : 'extension-heading')
 const currentStatus = (item: ExtensionRequest) => item.status === 'pending' && Date.parse(item.estimatedAt) <= now.value ? 'expired' : item.status
 const status = (value: ExtensionRequest['status']) => ({ pending: 'En attente', reviewed: 'Examinée', declined: 'Refusée', cancelled: 'Annulée', expired: 'Échéance passée' }[value])
@@ -95,17 +95,17 @@ onBeforeUnmount(() => { revision++; clearTimeout(expiryTimer) })
 </script>
 <template>
   <section v-if="enabled" class="section-block extension-requests" :aria-labelledby="headingID">
-    <div class="section-heading"><h2 :id="headingID">{{ heading }}</h2><button class="button secondary compact" :disabled="loading || busy !== null" @click="load()">{{ admin ? 'Actualiser la file' : 'Actualiser mes demandes de délai' }}</button></div>
+    <div class="section-heading"><h2 :id="headingID">{{ heading }}</h2><button class="button secondary compact" :disabled="loading || busy !== null" @click="load()">{{ admin ? 'Actualiser la file' : 'Actualiser mes demandes de report' }}</button></div>
     <p class="muted extension-intro">{{ admin ? 'Les 100 plus anciennes demandes en attente. Une réponse ne modifie pas Maintainerr : toute conservation reste une action séparée.' : 'Un examen ne garantit pas la conservation du contenu. La date de départ reste estimative.' }}</p>
-    <p v-if="loading" role="status" class="loading">Chargement des demandes de délai…</p>
+    <p v-if="loading" role="status" class="loading">Chargement des demandes de report…</p>
     <p v-if="success" role="status" class="inline-notice">{{ success }}</p>
-    <div v-if="error" role="alert" class="banner error-banner">{{ error }}<button :disabled="loading || busy !== null" @click="load()">Réessayer les demandes de délai</button></div>
+    <div v-if="error" role="alert" class="banner error-banner">{{ error }}<button :disabled="loading || busy !== null" @click="load()">Réessayer les demandes de report</button></div>
     <div v-if="items.length" class="extension-list">
       <article v-for="item in items" :key="item.id" class="panel extension-row">
         <span class="status-badge" :class="item.status === 'declined' ? 'declined' : 'pending'">{{ status(currentStatus(item)) }}</span>
         <h3>{{ item.title }}</h3>
         <p v-if="admin && item.requester">Demande de {{ item.requester }}</p>
-        <p>{{ item.days }} jour(s) demandé(s) · Départ estimé le {{ date(item.estimatedAt) }}</p>
+        <p>{{ item.days }} jour(s) demandé(s) · Retrait prévu le {{ date(item.estimatedAt) }}</p>
         <p v-if="currentStatus(item) === 'expired'" class="muted">Cette échéance passée ne confirme pas la suppression du contenu.</p>
         <p v-if="item.reason" class="request-reason">{{ item.reason }}</p>
         <p v-if="item.adminNote" class="admin-note"><strong>Réponse :</strong> {{ item.adminNote }}</p>
@@ -114,7 +114,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(expiryTimer) })
         <template v-if="!admin && currentStatus(item) === 'pending'">
           <button v-if="confirming !== item.id" :id="`extension-cancel-${item.id}`" class="button secondary compact cancel-button" :disabled="loading || busy !== null" @click="confirming = item.id">Annuler ma demande</button>
           <div v-else class="cancel-confirmation" role="group" :aria-labelledby="`extension-confirm-${item.id}`">
-            <p :id="`extension-confirm-${item.id}`">Annuler votre demande de délai pour « {{ item.title }} » ?</p>
+            <p :id="`extension-confirm-${item.id}`">Annuler votre demande de report pour « {{ item.title }} » ?</p>
             <p class="muted">Elle ne sera plus en attente d’examen. La date de retrait restera inchangée.</p>
             <div class="review-actions"><button class="button secondary compact" :disabled="loading || busy !== null" @click="cancel(item)">{{ busy === item.id ? 'Annulation…' : 'Confirmer l’annulation' }}</button><button class="button secondary compact" :disabled="loading || busy !== null" @click="keepRequest(item.id)">Garder ma demande</button></div>
           </div>
@@ -126,7 +126,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(expiryTimer) })
         </form>
       </article>
     </div>
-    <p v-else-if="!loading && !error" class="inline-notice">{{ admin ? 'Aucune demande en attente.' : 'Vous n’avez pas encore de demande de délai.' }}</p>
+    <p v-else-if="!loading && !error" class="inline-notice">{{ admin ? 'Aucune demande en attente.' : 'Vous n’avez pas encore de demande de report.' }}</p>
   </section>
 </template>
 <style scoped>

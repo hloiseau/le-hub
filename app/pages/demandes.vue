@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { statusLabels } from '~/types/api'
-import type { RequestPage, RequestStatus, ReminderPreferences } from '~/types/api'
+import type { RequestPage, RequestStatus } from '~/types/api'
+definePageMeta({ middleware: to => { if (to.hash === '#rappels') return navigateTo('/compte#rappels', { replace: true }) } })
 const { ready, session, demo, services, capabilities, refresh } = useHub()
 const enabled = computed(() => demo.value || capabilities.value?.requests === true)
-const preferences = ref<ReminderPreferences | null>(null)
 const page = ref<RequestPage>({ items: [], total: 0, offset: 0, limit: 10 })
 const loading = ref(false)
 const error = ref('')
@@ -39,9 +39,9 @@ const seerr = computed(() => services.value.find(s => s.id === 'seerr')?.url)
 </script>
 <template>
   <div>
-  <section class="page-heading"><h1>Mes demandes<span>.</span></h1><p class="lede">État des demandes de films et séries dans Seerr.</p></section>
-  <p class="muted requests-intro">Vos demandes Seerr sont retrouvées automatiquement avec votre compte Plex. <NuxtLink v-if="!demo && (capabilities?.notifications || capabilities?.discordChannelReminders)" to="/demandes#rappels" class="text-button">Régler mes notifications <HubIcon name="arrow" /></NuxtLink></p>
-  <div v-if="enabled" class="section-heading requests-actions"><label class="select-label">Afficher <select v-model="status"><option value="all">Tous les états</option><option v-for="(label, value) in statusLabels" :key="value" :value="value">{{ label }}</option></select></label><div class="requests-buttons"><button class="button secondary" :disabled="loading" @click="load(page.offset)">Actualiser mes demandes</button><a v-if="seerr" :href="seerr" target="_blank" rel="noopener noreferrer" class="button primary">Demander sur Seerr <HubIcon name="external" /></a></div></div>
+  <section class="page-heading page-heading-actions"><h1>Mes demandes<span>.</span></h1><a v-if="seerr" :href="seerr" target="_blank" rel="noopener noreferrer" class="button primary">Demander sur Seerr <HubIcon name="external" /></a></section>
+  <p class="muted requests-intro"><NuxtLink v-if="!demo && (capabilities?.notifications || capabilities?.discordChannelReminders)" to="/compte#rappels" class="text-button">Régler mes notifications <HubIcon name="arrow" /></NuxtLink></p>
+  <div v-if="enabled" class="section-heading requests-actions"><label class="select-label">Afficher <select v-model="status"><option value="all">Tous les états</option><option v-for="(label, value) in statusLabels" :key="value" :value="value">{{ label }}</option></select></label><div class="requests-buttons"><button class="button secondary" :disabled="loading" @click="load(page.offset)">Actualiser mes demandes</button></div></div>
   <EmptyState v-if="!session.user || !session.plexConnected" icon="requests" title="Vos demandes, rien qu’à vous" text="Connectez-vous avec Plex. Votre compte Seerr sera retrouvé automatiquement grâce à votre identité Plex."><NuxtLink to="/compte" class="button primary">Mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
   <EmptyState v-else-if="!enabled" icon="requests" title="Les demandes ne sont pas encore disponibles" text="Vos demandes apparaîtront ici dès que Seerr sera configuré." />
   <p v-else-if="loading" class="loading" role="status">Récupération de vos demandes…</p>
@@ -50,8 +50,7 @@ const seerr = computed(() => services.value.find(s => s.id === 'seerr')?.url)
   <EmptyState v-else icon="requests" title="Aucune demande à afficher" text="Aucune demande ne correspond à la sélection. Modifiez le filtre ou créez une demande dans Seerr." />
   <div v-if="page.total > 10 && !error" class="pagination"><button class="button secondary" :disabled="page.offset === 0 || loading" @click="load(Math.max(0, page.offset - page.limit))">Précédent</button><span>{{ page.offset + 1 }}–{{ Math.min(page.offset + page.limit, page.total) }} sur {{ page.total }}</span><button class="button secondary" :disabled="page.offset + page.limit >= page.total || loading" @click="load(page.offset + page.limit)">Suivant</button></div>
   <p v-if="enabled" class="footnote">Un téléchargement à 100 % peut encore attendre son import. Les états et les saisons proviennent de Seerr.</p>
-  <ReminderPreferences v-if="!demo && (capabilities?.notifications || capabilities?.discordChannelReminders)" class="section-block" @change="preferences = $event" />
-  <AddedSubscriptions v-if="!demo && capabilities?.subscriptions" :preferences="preferences" />
+  <AddedSubscriptions v-if="!demo && capabilities?.subscriptions" />
   </div>
 </template>
 <style scoped>

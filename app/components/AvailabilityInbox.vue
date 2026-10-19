@@ -48,7 +48,7 @@ onBeforeUnmount(() => { generation++; clearTimeout(timer); document.removeEventL
       <div v-if="data.items.length" class="availability-list"><article v-for="item in data.items" :key="item.subscriptionId" class="panel availability-row"><div><span class="eyebrow">{{ item.type === 'movie' ? 'Film' : 'Série' }}<span v-if="item.season !== undefined"> · Saison {{ item.season }}</span></span><h3>{{ item.title }}</h3><p>Disponible pour vous · notification du <time :datetime="item.deliveredAt">{{ date(item.deliveredAt) }}</time></p></div><a v-if="safePlexURL(item.url)" :href="safePlexURL(item.url)" target="_blank" rel="noopener noreferrer" class="button secondary">Ouvrir dans Plex <HubIcon name="external" /></a></article></div>
       <p class="muted availability-note">Les 20 notifications les plus récentes sont conservées jusqu’à 90 jours. Chaque affichage vérifie vos accès actuels.</p>
     </template>
-    <NuxtLink to="/demandes#rappels" class="button secondary">Régler mes notifications <HubIcon name="arrow" /></NuxtLink>
+    <NuxtLink to="/compte#rappels" class="button secondary">Régler mes notifications <HubIcon name="arrow" /></NuxtLink>
   </section>
 </template>
 

@@ -66,17 +66,28 @@ watch(range, () => { history.value = null; void load() })
 watch(showDetails, () => { admin.value = null; void load() })
 onMounted(() => { document.addEventListener('visibilitychange', visibility); poll = setInterval(() => { now.value = Date.now(); if (!document.hidden && !loading.value && Date.now() - lastFetch >= 30_000) void load() }, 1000) })
 onBeforeUnmount(() => { clear(); clearInterval(poll); document.removeEventListener('visibilitychange', visibility) })
+const dashboardMetrics: { key: keyof Metrics, title: string }[] = [
+  { key: 'cpu_percent', title: 'CPU' }, { key: 'memory_used_bytes', title: 'Mémoire' },
+  { key: 'gpu_video_percent', title: 'GPU · vidéo' }, { key: 'plex_sessions', title: 'Sessions Plex' },
+  { key: 'network_receive_bytes_per_second', title: 'Réseau · réception' }, { key: 'disk_read_bytes_per_second', title: 'Disques · lecture' },
+]
+async function inspectMetric(key: keyof Metrics) {
+  metric.value = key
+  await nextTick()
+  document.getElementById('history-title')?.focus()
+  document.getElementById('history-title')?.scrollIntoView({ block: 'start' })
+}
 const hw = (value: boolean | null) => value === null ? 'Non renseigné' : value ? 'Oui' : 'Non'
 const streamDecisionLabels = { 'direct play': 'Lecture directe', copy: 'Copie sans réencodage', transcode: 'Transcodage' }
 </script>
 <template>
   <div>
-  <section class="page-heading"><h1>Les performances<span>.</span></h1><p class="lede">L’activité du serveur, ses mesures et leurs évolutions sur sept jours.</p></section>
+  <section class="page-heading"><h1>Performances</h1></section>
   <p v-if="!ready" role="status">Chargement des performances…</p>
   <EmptyState v-else-if="!session.user || !session.plexConnected" icon="chart" title="Connectez-vous avec Plex" text="Votre connexion Plex donne accès à l’activité du serveur." />
   <EmptyState v-else-if="!enabled" icon="chart" title="Les mesures ne sont pas activées" text="Aucune source de mesures n’est activée pour le Hub. L’administrateur peut relier l’activité Plex et les capteurs du serveur." />
   <template v-else>
-    <div class="section-heading"><p class="muted">Actualisation toutes les 30 secondes · suspendue dans un onglet masqué.</p><button class="button secondary compact" :disabled="loading" @click="load">Actualiser les performances</button></div>
+    <div class="section-heading dashboard-toolbar"><label class="select-label">Période<select v-model="range" aria-label="Période"><option value="1h">1 heure</option><option value="24h">24 heures</option><option value="7d">7 jours</option></select></label><p class="muted">Actualisation toutes les 30 secondes</p><button class="button secondary compact" :disabled="loading" @click="load">Actualiser les performances</button></div>
     <p v-if="loading && !snapshot" role="status">Chargement des mesures…</p>
     <div v-if="error" role="alert" class="banner error-banner">{{ error }}<button @click="load">Réessayer les mesures</button></div>
     <p v-if="snapshot && !live" role="status" class="inline-notice">Les mesures sont périmées. Une nouvelle vérification est nécessaire.</p>
@@ -89,9 +100,16 @@ const streamDecisionLabels = { 'direct play': 'Lecture directe', copy: 'Copie sa
     <p v-if="snapshot?.hostStatus === 'not_configured'" class="inline-notice">Les mesures CPU, mémoire, stockage et réseau ne sont pas encore reliées au Hub.<template v-if="currentActivity"> L’activité Plex reste disponible.</template></p>
     <p v-else-if="snapshot?.hostStatus === 'error'" role="alert" class="inline-notice">Le collecteur du serveur ne fournit pas de mesures lisibles. L’administrateur doit vérifier sa connexion au Hub.</p>
     <p v-else-if="snapshot?.hostStatus === 'stale'" role="status" class="inline-notice">Le collecteur du serveur n’a pas transmis de mesures récentes.</p>
+    <section v-if="history" class="dashboard-grid" aria-label="Graphiques du serveur">
+      <article v-for="card in dashboardMetrics" :key="card.key" class="panel dashboard-card">
+        <div class="dashboard-card-heading"><h2>{{ card.title }}</h2><button class="text-button" :aria-label="`Analyser : ${card.title}`" @click="inspectMetric(card.key)">Détail <HubIcon name="arrow" /></button></div>
+        <p class="dashboard-value">{{ metricText(snapshot?.metrics[card.key], (!!snapshot && !live) || (toparrExpired && toparrMetrics.includes(card.key))) }}</p>
+        <MetricChart :history="history" :metric="card.key" compact />
+      </article>
+    </section>
     <div class="performance-grid"><section v-for="group in groups" :key="group.name" class="panel"><h2>{{ group.name }}</h2><template v-if="group.name === 'GPU' && toparrConfigured"><p class="muted">Activité GPU fournie par Toparr.</p><p v-if="toparrNotice" role="status" class="inline-notice">{{ toparrNotice }}</p><p v-if="snapshot?.toparrUpdatedAt" class="muted">Dernière mesure Toparr le {{ metricDate(snapshot.toparrUpdatedAt) }}.</p></template><dl><div v-for="key in group.keys" :key="key" class="metric-row" :data-metric="key"><dt>{{ metricLabels[key] }}</dt><dd>{{ metricText(snapshot?.metrics[key], (!!snapshot && !live) || (toparrExpired && toparrMetrics.includes(key))) }}</dd></div></dl></section></div>
     <p v-if="snapshot?.hostUpdatedAt" class="muted">Mesures de l’hôte collectées le {{ metricDate(snapshot.hostUpdatedAt) }}. Un capteur absent reste « Non disponible ».</p>
-    <section class="panel history-panel" aria-labelledby="history-title"><div class="section-heading"><h2 id="history-title">Dans le temps</h2><div class="chart-selectors"><label>Mesure<select v-model="metric" aria-label="Mesure"><option v-for="(label, key) in metricLabels" :key="key" :value="key">{{ label }}</option></select></label><label>Période<select v-model="range" aria-label="Période"><option value="1h">1 heure</option><option value="24h">24 heures</option><option value="7d">7 jours</option></select></label></div></div><p v-if="historyError" role="alert">{{ historyError }} Les mesures actuelles restent indépendantes de l’historique.</p><MetricChart v-if="history" :history="history" :metric="metric" /><p v-else-if="!historyError" class="muted">L’historique apparaîtra après les premières mesures.</p><p v-if="history" class="muted">Historique chargé le {{ metricDate(history.updatedAt) }} · rétention de {{ history.retentionDays }} jours.</p></section>
+    <section class="panel history-panel" aria-labelledby="history-title"><div class="section-heading"><h2 id="history-title" tabindex="-1">Explorer une mesure</h2><div class="chart-selectors"><label>Mesure<select v-model="metric" aria-label="Mesure"><option v-for="(label, key) in metricLabels" :key="key" :value="key">{{ label }}</option></select></label></div></div><p v-if="historyError" role="alert">{{ historyError }} Les mesures actuelles restent indépendantes de l’historique.</p><MetricChart v-if="history" :history="history" :metric="metric" /><p v-else-if="!historyError" class="muted">L’historique apparaîtra après les premières mesures.</p><p v-if="history" class="muted">Historique chargé le {{ metricDate(history.updatedAt) }} · rétention de {{ history.retentionDays }} jours.</p></section>
     <section v-if="session.admin" class="panel admin-monitoring"><h2>Détails administrateur</h2><label><input v-model="showDetails" type="checkbox"> Afficher les sessions et les équipements</label>
       <p v-if="detailsError" role="alert">{{ detailsError }}</p>
       <template v-if="details"><p v-if="details.hostVersion">Version de l’hôte : {{ details.hostVersion }}</p><div v-for="(item, index) in details.sessions" :key="index" class="session-row"><h3>{{ item.user || 'Utilisateur non renseigné' }} · {{ item.title || 'Titre non renseigné' }}</h3><p>{{ item.state }} · {{ item.decision }} · vidéo {{ item.videoCodec || 'non renseigné' }} / audio {{ item.audioCodec || 'non renseigné' }}</p><p v-if="item.videoDecision || item.audioDecision" class="session-decisions"><span v-if="item.videoDecision">Vidéo : {{ streamDecisionLabels[item.videoDecision] }}</span><template v-if="item.videoDecision && item.audioDecision"> · </template><span v-if="item.audioDecision">Audio : {{ streamDecisionLabels[item.audioDecision] }}</span></p><p>Décodage matériel : {{ hw(item.hardwareDecoding) }} · Encodage matériel : {{ hw(item.hardwareEncoding) }}</p></div><p v-if="!details.sessions.length">Aucune session détaillée disponible.</p><div v-for="(item, index) in details.hostDetails" :key="index" class="host-row"><h3>{{ item.name }} · {{ item.kind }}</h3><p v-if="item.status === 'error'">Équipement en erreur</p><dl><div v-for="(value, key) in item.values" :key="key" class="metric-row"><dt>{{ metricLabels[key] }}</dt><dd>{{ metricText(value) }}</dd></div></dl></div></template>
@@ -101,5 +119,7 @@ const streamDecisionLabels = { 'direct play': 'Lecture directe', copy: 'Copie sa
   </div>
 </template>
 <style scoped>
+.dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:24px 0}.dashboard-card{padding:18px}.dashboard-card-heading{display:flex;justify-content:space-between;gap:12px;align-items:center}.dashboard-card-heading h2{font-size:16px}.dashboard-value{font-size:26px!important;color:var(--text)!important;font-weight:650;margin:6px 0}.dashboard-toolbar{flex-wrap:wrap}.dashboard-toolbar>p{font-size:12px}.dashboard-card-heading .text-button{font-size:12px}#history-title{scroll-margin-top:90px}.dashboard-card .metric-chart{margin-top:10px}@media(max-width:700px){.dashboard-grid{grid-template-columns:1fr}.dashboard-toolbar>p{display:none}}
+
 .performance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1.5rem 0}.panel{min-width:0}.metric-row{padding:.8rem 0;border-bottom:1px solid #ffffff12}.metric-row dt{font-size:.85rem;color:var(--muted,#a9abae)}.metric-row dd{margin:.3rem 0 0;font-weight:600;overflow-wrap:anywhere}.activity-counts{display:flex;gap:1.5rem;flex-wrap:wrap}.activity-counts dt{font-size:.8rem;color:var(--muted,#a9abae)}.activity-counts dd{margin:.5rem 0;font-size:1.6rem}.activity-panel .muted{font-size:.85rem}.history-panel,.admin-monitoring{margin-top:1.5rem}.chart-selectors{display:flex;gap:1rem;flex-wrap:wrap}.chart-selectors label{font-size:.8rem}.chart-selectors select{display:block;width:100%;max-width:300px;padding:.5rem;background:var(--surface,#202521);color:inherit;border:1px solid #ffffff30;border-radius:6px;margin-top:.3rem}.session-row,.host-row{padding-top:1rem;margin-top:1rem;border-top:1px solid #ffffff20;overflow-wrap:anywhere}.admin-monitoring input{margin-right:.5rem}@media(max-width:1050px){.performance-grid{grid-template-columns:1fr 1fr}}@media(max-width:650px){.performance-grid{grid-template-columns:1fr}.chart-selectors,.chart-selectors label{width:100%}.chart-selectors select{max-width:100%}.section-heading{flex-wrap:wrap;gap:1rem}.activity-counts>div{flex:1 0 120px}}
 </style>

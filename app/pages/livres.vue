@@ -125,9 +125,8 @@ onBeforeUnmount(() => { revision++; requestRevision++; clearTimeout(expiryTimer)
 
 <template>
   <div>
-  <section class="page-heading"><h1>Vos livres<span>.</span></h1><p class="lede">Votre catalogue Grimmory et vos prochaines envies de lecture.</p></section>
-  <p v-if="capabilities?.bookCollections"><NuxtLink to="/collections" class="button secondary">Parcourir mes collections <HubIcon name="arrow" /></NuxtLink></p>
-  <p v-if="capabilities?.bookRequestTracking"><NuxtLink to="/demandes-livres" class="button secondary">Suivre mes demandes de livres <HubIcon name="arrow" /></NuxtLink></p>
+  <section class="page-heading"><h1>Livres</h1></section>
+  <BookNavigation />
   <div v-if="feedback" class="banner" role="status">{{ feedback }}</div>
   <div v-if="error" class="banner error-banner" role="alert">{{ error }}<button v-if="!saving" @click="linked ? load() : initialize()">Réessayer le catalogue</button></div>
   <section v-if="catalogEnabled" class="panel book-connection" aria-labelledby="book-connection-heading">
@@ -160,7 +159,7 @@ onBeforeUnmount(() => { revision++; requestRevision++; clearTimeout(expiryTimer)
     <p class="footnote">Les formats sont ceux proposés par Grimmory. Ouvrez sa fiche pour lire ou télécharger avec votre compte. Deux éditions d’un même titre restent distinctes.</p>
   </section>
   <section class="panel book-request" aria-labelledby="book-request-heading">
-    <h2 id="book-request-heading">Une envie de lecture ?</h2>
+    <h2 id="book-request-heading">Demander un livre</h2>
     <template v-if="requestsEnabled"><p>Préparez une recherche, puis choisissez l’édition et confirmez dans Shelfmark. Ses règles d’approbation continuent de s’appliquer.</p><form class="book-form" @submit.prevent="prepareRequest"><label>Livre à demander<input v-model="requestSearch" maxlength="200" required placeholder="Titre, auteur ou ISBN" /></label><button class="button primary" type="submit" :disabled="preparing">{{ preparing ? 'Préparation…' : 'Préparer la recherche Shelfmark' }}</button></form><p v-if="requestError" class="banner error-banner" role="alert">{{ requestError }}</p><div v-if="requestLink" class="book-request-confirm" role="status"><p>{{ requestLink.message }}</p><a :href="safeRequestURL(requestLink.url)" target="_blank" rel="noopener noreferrer" class="button secondary">Choisir et confirmer dans Shelfmark <HubIcon name="external" /></a></div><p class="footnote">Aucune demande n’est créée dans Le Hub. Le suivi de la demande reste dans Shelfmark.</p></template>
     <p v-else class="muted">Le lien Shelfmark n’est pas encore configuré. L’administrateur pourra l’ajouter pour vos demandes de lecture.</p>
   </section>

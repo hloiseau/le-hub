@@ -28,6 +28,23 @@ async function routes(page: Page, options: { admin?: boolean, enabled?: boolean,
   return counts
 }
 
+test('dashboard shows six real histories and opens the selected metric in the explorer', async ({ page }, testInfo) => {
+  const counts = await routes(page)
+  const values = (i: number) => ({ cpu_percent: observed(20 + i % 12), memory_used_bytes: observed((12 + i % 3) * 1024 ** 3, 'bytes'), gpu_video_percent: observed(i % 10 * 7), plex_sessions: observed(i % 5, 'count'), network_receive_bytes_per_second: observed((i % 8 + 1) * 1024 ** 2, 'bytes_per_second'), disk_read_bytes_per_second: observed((i % 11) * 1024 ** 2, 'bytes_per_second') })
+  await page.route('**/api/v1/monitoring', route => route.fulfill({ json: { ...snapshot(), metrics: { ...snapshot().metrics, ...values(18) } } }))
+  await page.route('**/api/v1/monitoring/history?**', route => route.fulfill({ json: { ...history(), stepSeconds: 1800, items: Array.from({ length: 48 }, (_, i) => ({ at: new Date(Date.now() - (47 - i) * 1800_000).toISOString(), values: values(i) })) } }))
+  await page.goto('/performances')
+  await expect(page.locator('.dashboard-card')).toHaveCount(6)
+  await expect(page.locator('.dashboard-card .curve')).toHaveCount(6)
+  await expect(page.locator('.dashboard-card').filter({ has: page.getByRole('heading', { name: 'Mémoire', exact: true }) })).toContainText('12 Gio')
+  expect(counts.admin).toBe(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('dashboard.png'), fullPage: true })
+  await page.getByRole('button', { name: 'Analyser : Mémoire', exact: true }).click()
+  await expect(page.getByLabel('Mesure', { exact: true })).toHaveValue('memory_used_bytes')
+  await expect(page.getByRole('heading', { name: 'Explorer une mesure' })).toBeFocused()
+})
+
 test('monitoring renders real zeros, missing values, gaps and interactive history', async ({ page }, testInfo) => {
   const counts = await routes(page)
   await page.goto('/performances')
@@ -36,8 +53,8 @@ test('monitoring renders real zeros, missing values, gaps and interactive histor
   await expect(page.locator('[data-metric="gpu_video_percent"] dd')).toHaveText('Non disponible')
   await expect(page.locator('[data-metric="cpu_temperature"] dd')).toHaveText('Mesure en erreur')
   await expect(page.locator('.activity-counts')).toContainText('Non renseigné')
-  await expect(page.locator('.metric-chart .curve')).toHaveCount(2)
-  await expect(page.locator('.metric-chart circle')).toHaveCount(4)
+  await expect(page.locator('.history-panel .metric-chart .curve')).toHaveCount(2)
+  await expect(page.locator('.history-panel .metric-chart circle')).toHaveCount(4)
   const graph = page.getByRole('img', { name: /^Historique : Utilisation CPU/ })
   expect((await graph.boundingBox())?.height).toBeGreaterThan(180)
   await graph.focus(); await graph.press('Home')
@@ -49,7 +66,7 @@ test('monitoring renders real zeros, missing values, gaps and interactive histor
   await page.getByLabel('Fin du zoom').fill('50')
   await expect(page.getByText('Aucune mesure sur cette période.')).toBeVisible()
   await page.getByRole('button', { name: 'Réinitialiser le zoom' }).click()
-  await expect(page.locator('.metric-chart circle')).toHaveCount(4)
+  await expect(page.locator('.history-panel .metric-chart circle')).toHaveCount(4)
   await page.getByText('Consulter les mesures en tableau').click()
   await expect(page.locator('.chart-table tbody tr')).toHaveCount(5)
   await expect(page.getByRole('heading', { name: 'Détails administrateur' })).toHaveCount(0)
@@ -195,7 +212,7 @@ for (const failure of [
     await expect(page.locator('[data-metric="gpu_temperature"] dd')).toHaveText('37 °C')
     await expect(page.locator('.activity-counts')).toContainText('Sessions')
     await expect(page.locator('.activity-counts')).toContainText('3')
-    await expect(page.locator('.metric-chart .curve')).toHaveCount(2)
+    await expect(page.locator('.history-panel .metric-chart .curve')).toHaveCount(2)
     await expect(page.getByText(/^Dernière mesure Toparr le/)).toHaveCount(failure.status === 'stale' ? 1 : 0)
   })
 }
