@@ -35,7 +35,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(timer); document.removeEventLis
 </script>
 <template>
   <section v-if="enabled" class="section-block reminder-inbox" aria-labelledby="reminders-heading">
-    <div class="section-heading"><div><span class="eyebrow">VOS RAPPELS PERSONNELS</span><h2 id="reminders-heading">Mes rappels</h2></div><button class="button secondary compact" :disabled="loading" @click="load">Actualiser mes rappels</button></div>
+    <div class="section-heading"><div><h2 id="reminders-heading">Mes rappels</h2></div><button class="button secondary compact" :disabled="loading" @click="load">Actualiser mes rappels</button></div>
     <p class="muted reminder-intro">Vos rappels sont regroupés ici, au maximum une fois par jour. Les messages privés Discord sont facultatifs et se règlent dans Mes demandes.</p>
     <p v-if="loading" role="status" class="loading">Vérification de vos rappels…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="load">Réessayer les rappels</button></div>

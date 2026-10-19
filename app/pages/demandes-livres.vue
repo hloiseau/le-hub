@@ -83,7 +83,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(expiryTimer); password.value = 
 
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">VOTRE PROCHAINE LECTURE</p><h1>Demandes de livres<span>.</span></h1><p class="lede">Les étapes signalées par votre compte personnel Shelfmark.</p></section>
+  <section class="page-heading"><h1>Demandes de livres<span>.</span></h1><p class="lede">Les étapes signalées par votre compte personnel Shelfmark.</p></section>
   <p><NuxtLink to="/livres" class="button secondary">Revenir aux livres <HubIcon name="arrow" /></NuxtLink></p>
   <div v-if="feedback" class="banner" role="status">{{ feedback }}</div>
   <div v-if="error" class="banner error-banner" role="alert">{{ error }}<button :disabled="saving || loading" @click="linked ? load() : initialize()">Réessayer</button></div>

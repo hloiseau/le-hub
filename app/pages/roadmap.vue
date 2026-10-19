@@ -8,7 +8,7 @@ const date = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'm
 
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">LES PROCHAINES ÉTAPES</p><h1>La roadmap<span>.</span></h1><p class="lede">Ce qui est prévu, en cours et livré, dans la sélection publiée pour les membres du Hub.</p></section>
+  <section class="page-heading"><h1>La roadmap<span>.</span></h1><p class="lede">Ce qui est prévu, en cours et livré, dans la sélection publiée pour les membres du Hub.</p></section>
   <EmptyState v-if="!enabled" icon="spark" title="La roadmap arrive bientôt" text="Les évolutions apparaîtront quand une sélection sera publiée par votre serveur." />
   <template v-else>
     <div class="section-heading"><p class="muted roadmap-intro">Les dates apparaissent uniquement lorsqu’elles sont confirmées. Les discussions privées et les détails d’administration ne font pas partie de cette sélection.</p><button class="button secondary" :disabled="loading" @click="load">Actualiser la roadmap</button></div>

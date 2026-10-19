@@ -42,7 +42,7 @@ test('recent books require a personal link and the backend capability', async ({
   await page.unroute('**/api/v1/**')
   const disabled = await fixture(page, false)
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'On regarde quoi ?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Accueil' })).toBeVisible()
   await expect(page.locator('.recent-books')).toHaveCount(0)
   expect(disabled.reads).toBe(0)
 })

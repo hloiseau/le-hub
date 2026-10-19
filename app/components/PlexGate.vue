@@ -35,9 +35,7 @@ async function poll() {
   <main id="main" class="login-screen">
     <section class="login-card" aria-labelledby="login-title">
       <span class="brand">le hub<span>.</span></span>
-      <div class="login-orbit" aria-hidden="true"><HubIcon name="play" /></div>
-      <p class="eyebrow">VOTRE COIN MULTIMÉDIA</p>
-      <h1 id="login-title">La soirée commence ici<span>.</span></h1>
+      <h1 id="login-title">Connexion</h1>
       <p class="lede">Connectez-vous avec Plex pour retrouver votre espace. Votre compte doit avoir accès au serveur.</p>
       <p v-if="!ready" role="status" class="loading">Vérification de votre connexion…</p>
       <template v-else>

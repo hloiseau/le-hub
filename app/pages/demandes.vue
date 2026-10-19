@@ -39,7 +39,7 @@ const seerr = computed(() => services.value.find(s => s.id === 'seerr')?.url)
 </script>
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">DE L’ENVIE À L’ÉCRAN</p><h1>Mes demandes<span>.</span></h1><p class="lede">Un seul endroit pour savoir où en sont vos films et séries.</p></section>
+  <section class="page-heading"><h1>Mes demandes<span>.</span></h1><p class="lede">État des demandes de films et séries dans Seerr.</p></section>
   <p class="muted requests-intro">Vos demandes Seerr sont retrouvées automatiquement avec votre compte Plex. <NuxtLink v-if="!demo && (capabilities?.notifications || capabilities?.discordChannelReminders)" to="/demandes#rappels" class="text-button">Régler mes notifications <HubIcon name="arrow" /></NuxtLink></p>
   <div v-if="enabled" class="section-heading requests-actions"><label class="select-label">Afficher <select v-model="status"><option value="all">Tous les états</option><option v-for="(label, value) in statusLabels" :key="value" :value="value">{{ label }}</option></select></label><div class="requests-buttons"><button class="button secondary" :disabled="loading" @click="load(page.offset)">Actualiser mes demandes</button><a v-if="seerr" :href="seerr" target="_blank" rel="noopener noreferrer" class="button primary">Demander sur Seerr <HubIcon name="external" /></a></div></div>
   <EmptyState v-if="!session.user || !session.plexConnected" icon="requests" title="Vos demandes, rien qu’à vous" text="Connectez-vous avec Plex. Votre compte Seerr sera retrouvé automatiquement grâce à votre identité Plex."><NuxtLink to="/compte" class="button primary">Mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
@@ -47,7 +47,7 @@ const seerr = computed(() => services.value.find(s => s.id === 'seerr')?.url)
   <p v-else-if="loading" class="loading" role="status">Récupération de vos demandes…</p>
   <div v-else-if="error" class="banner error-banner" role="alert">{{ error }}<button @click="load(page.offset)">Réessayer</button><NuxtLink to="/compte">Mon compte</NuxtLink></div>
   <RequestList v-else-if="page.items.length" :items="page.items" :seerr-url="seerr" />
-  <EmptyState v-else icon="requests" title="Aucune demande à afficher" text="Votre prochaine envie trouvera sa place ici. Si un filtre est actif, essayez de le modifier." />
+  <EmptyState v-else icon="requests" title="Aucune demande à afficher" text="Aucune demande ne correspond à la sélection. Modifiez le filtre ou créez une demande dans Seerr." />
   <div v-if="page.total > 10 && !error" class="pagination"><button class="button secondary" :disabled="page.offset === 0 || loading" @click="load(Math.max(0, page.offset - page.limit))">Précédent</button><span>{{ page.offset + 1 }}–{{ Math.min(page.offset + page.limit, page.total) }} sur {{ page.total }}</span><button class="button secondary" :disabled="page.offset + page.limit >= page.total || loading" @click="load(page.offset + page.limit)">Suivant</button></div>
   <p v-if="enabled" class="footnote">Un téléchargement à 100 % peut encore attendre son import. Les états et les saisons proviennent de Seerr.</p>
   <ReminderPreferences v-if="!demo && (capabilities?.notifications || capabilities?.discordChannelReminders)" class="section-block" @change="preferences = $event" />

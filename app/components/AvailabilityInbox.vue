@@ -40,7 +40,7 @@ onBeforeUnmount(() => { generation++; clearTimeout(timer); document.removeEventL
 
 <template>
   <section v-if="enabled && (loading || message || data?.items.length)" class="section-block availability-inbox" aria-labelledby="availability-heading">
-    <div class="section-heading"><div><span class="eyebrow">VOS ENVIES SONT ARRIVÉES</span><h2 id="availability-heading">Mes disponibilités</h2></div><button class="button secondary" :disabled="loading" @click="load">Actualiser les disponibilités</button></div>
+    <div class="section-heading"><div><h2 id="availability-heading">Mes disponibilités</h2></div><button class="button secondary" :disabled="loading" @click="load">Actualiser les disponibilités</button></div>
     <p class="muted availability-note">Un récapitulatif par jour, selon vos heures calmes et le plafond partagé avec vos rappels avant départ. Discord reste facultatif, au choix pour chaque suivi.</p>
     <p v-if="loading" role="status" class="loading">Vérification de vos disponibilités…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="load">Réessayer les disponibilités</button></div>
