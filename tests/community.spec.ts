@@ -24,10 +24,10 @@ test('community uses Discord as its only voting destination and reflects archive
     return route.fulfill({ json: feed([{ ...thread, archived, ...(archived ? { title: 'Titre mis à jour', status: 'resolved' } : {}) }]) })
   })
   await page.goto('/communaute')
-  await expect(page.getByRole('heading', { name: 'La communauté.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Communauté', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Discuter et voter dans Discord' })).toHaveAttribute('href', thread.url)
   await expect(page.getByRole('button', { name: /voter/i })).toHaveCount(0)
-  await expect(page.getByText('Elle ne constitue pas une lecture en direct', { exact: false })).toBeVisible()
+  await expect(page.getByText('Discussions et votes dans Discord.', { exact: true })).toBeVisible()
   archived = true
   await page.getByRole('button', { name: 'Actualiser la communauté' }).click()
   await expect(page.locator('.community-thread')).toContainText('Titre mis à jour')
@@ -47,7 +47,7 @@ test('roadmap presents only confirmed dates and explicit public dependencies', a
     { ...milestone, id: 'later', title: 'Sans date promise' },
   ]) }))
   await page.goto('/roadmap')
-  await expect(page.getByRole('heading', { name: 'La roadmap.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Communauté', exact: true })).toBeVisible()
   await expect(page.locator('#step-first-step')).toContainText('En cours')
   await expect(page.locator('#step-first-step .confirmed-date')).toHaveCount(0)
   await expect(page.locator('#step-later .confirmed-date')).toHaveCount(0)
@@ -84,9 +84,9 @@ test('community capabilities off do not fetch publications', async ({ page }) =>
   let reads = 0
   await page.route(/\/api\/v1\/(community|roadmap)$/, route => { reads++; return route.fulfill({ json: feed([thread]) }) })
   await page.goto('/communaute')
-  await expect(page.getByRole('heading', { name: 'La communauté arrive bientôt' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Communauté non configurée' })).toBeVisible()
   await page.goto('/roadmap')
-  await expect(page.getByRole('heading', { name: 'La roadmap arrive bientôt' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Roadmap non configurée' })).toBeVisible()
   expect(reads).toBe(0)
 })
 

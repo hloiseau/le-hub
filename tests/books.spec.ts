@@ -115,7 +115,7 @@ test('late link responses cannot reappear after logout', async ({ page }) => {
   await startedPromise
   await page.getByRole('button', { name: 'Déconnexion', exact: true }).click()
   release()
-  await expect(page.getByRole('heading', { name: 'Vos livres.' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Livres', exact: true })).toHaveCount(0)
   await expect(page.locator('.book-card')).toHaveCount(0)
   await expect(page.getByText('Votre catalogue personnel est relié pour cette session.')).toHaveCount(0)
 })

@@ -9,7 +9,7 @@ test('old request reminders need a separate opt in and share the existing prefer
     if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/demandes')
+  await page.goto('/compte#rappels')
   const choice = page.getByRole('checkbox', { name: 'Me rappeler mes anciennes demandes non vues' })
   await expect(choice).not.toBeChecked()
   await expect(choice).toBeDisabled()
@@ -30,7 +30,7 @@ test('old request inbox shows the actual Plex addition without inventing a depar
   const data = reminderPage()
   const { estimatedAt: _deadline, ...base } = data.items[0]!
   await page.route('**/api/v1/reminders', route => route.fulfill({ json: { ...data, items: [{ ...base, reason: 'available_unwatched', milestoneDays: 0, availableAt: new Date(Date.now() - 40 * 86400_000).toISOString() }] } }))
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   const row = page.locator('.reminder-row')
   await expect(row).toContainText('Demandé et toujours non vu')
   await expect(row).toContainText('Ajouté dans Plex le')
@@ -46,7 +46,7 @@ test('all unwatched stays optional and its explicit choice survives saving', asy
     if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/demandes')
+  await page.goto('/compte#rappels')
   const choice = page.getByRole('checkbox', { name: 'Inclure tous mes contenus non vus' })
   await expect(choice).not.toBeChecked()
   await choice.check()
@@ -63,7 +63,7 @@ test('unstarted reminder names the Plex state and offers to open the film', asyn
   data.scope = 'personal_interest'
   data.items[0]!.reason = 'unstarted_before_removal'
   await page.route('**/api/v1/reminders', route => route.fulfill({ json: data }))
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect(page.locator('.reminder-row')).toContainText('Marqué non vu dans Plex')
   await expect(page.getByRole('link', { name: 'Ouvrir dans Plex' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Reprendre dans Plex' })).toHaveCount(0)
@@ -94,7 +94,7 @@ test('reminder preferences opt in explicitly and persist only targeted inbox del
     if (route.request().method() === 'PUT') { preferences = route.request().postDataJSON(); writes++ }
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/demandes')
+  await page.goto('/compte#rappels')
   await expect(page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })).not.toBeChecked()
   await expect(page.getByText('Désactivés par défaut. Les messages privés Discord se choisissent séparément.')).toBeVisible()
   await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
@@ -120,7 +120,7 @@ test('private reminder inbox renders safely and withdraws content after an upstr
   await signedIn(page)
   let failed = false
   await page.route('**/api/v1/reminders', route => route.fulfill(failed ? { status: 503, json: { error: { message: 'Rappels temporairement indisponibles.' } } } : { json: reminderPage() }))
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect(page.locator('.reminder-row')).toHaveCount(1)
   await expect(page.getByRole('heading', { name: '<img src=x onerror=alert(1)>' })).toBeVisible()
   await expect(page.locator('.reminder-list img')).toHaveCount(0)
@@ -144,7 +144,7 @@ test('Discord reminder consent is separate and is cleared when reminders are dis
     if (route.request().method() === 'PUT') preferences = route.request().postDataJSON()
     return route.fulfill({ json: preferences })
   })
-  await page.goto('/demandes')
+  await page.goto('/compte#rappels')
   const inbox = page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' })
   const discord = page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' })
   await expect(discord).not.toBeChecked()
@@ -175,7 +175,7 @@ test('Discord reminder consent is separate and is cleared when reminders are dis
 for (const state of [{ enabled: false, linked: true }, { enabled: true, linked: false }]) {
   test(`Discord consent requires both channel configuration and linked identity (${JSON.stringify(state)})`, async ({ page }) => {
     await signedIn(page, state)
-    await page.goto('/demandes')
+    await page.goto('/compte#rappels')
     await page.getByRole('checkbox', { name: 'Activer mes rappels dans Le Hub' }).check()
     await expect(page.getByRole('checkbox', { name: 'Recevoir aussi mes rappels en message privé Discord' })).toBeDisabled()
     await expect(page.getByText(state.linked ? 'Les messages privés Discord ne sont pas disponibles sur ce serveur.' : 'Liez votre compte Discord pour choisir les messages privés.')).toBeVisible()
@@ -190,7 +190,7 @@ test('expired reminders disappear when fresh verification fails', async ({ page 
     const data = reminderPage(); data.expiresAt = new Date(Date.now() + 2500).toISOString()
     return route.fulfill({ json: data })
   })
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect(page.locator('.reminder-row')).toHaveCount(1)
   await expect(page.getByRole('alert')).toContainText('Vérification indisponible', { timeout: 10_000 })
   await expect(page.locator('.reminder-row')).toHaveCount(0)
@@ -202,7 +202,7 @@ test('pending reminder responses cannot restore the inbox after logout', async (
   const pending = new Promise<void>(resolve => { release = resolve })
   let requested = false
   await page.route('**/api/v1/reminders', async route => { requested = true; await pending; await route.fulfill({ json: reminderPage() }) })
-  await page.goto('/avant-le-depart')
+  await page.goto('/retraits')
   await expect.poll(() => requested).toBe(true)
   await page.getByRole('button', { name: 'Déconnexion' }).click()
   release()

@@ -1,19 +1,33 @@
 <script setup lang="ts">
 import type { Subscriptions, ReminderPreferences } from '~/types/api'
 
-const props = defineProps<{ preferences: ReminderPreferences | null }>()
+const preferences = ref<ReminderPreferences | null>(null)
 const { session, ready, capabilities, demo, refresh } = useHub()
 const data = ref<Subscriptions>({ items: [], total: 0, offset: 0, limit: 10 })
 const loading = ref(false)
 const removing = ref<number | null>(null)
 const changing = ref<number | null>(null)
 const inboxRevision = ref(0)
-const discordReady = computed(() => capabilities.value?.discordDMs === true && Boolean(session.value.user?.discordId) && props.preferences?.enabled === true && props.preferences?.discordDmEnabled === true)
+const discordReady = computed(() => capabilities.value?.discordDMs === true && Boolean(session.value.user?.discordId) && preferences.value?.enabled === true && preferences.value?.discordDmEnabled === true)
 const busy = computed(() => removing.value !== null || changing.value !== null)
 const error = ref('')
 const feedback = ref('')
 let revision = 0
 let actionRevision = 0
+let preferenceRevision = 0
+
+async function loadPreferences() {
+  const current = ++preferenceRevision
+  preferences.value = null
+  if (!ready.value || !session.value.user || !session.value.plexConnected || !capabilities.value?.notifications || demo.value) return
+  try {
+    const result = await $fetch<ReminderPreferences>('/api/v1/reminders/preferences', { retry: 0 })
+    if (current === preferenceRevision) preferences.value = result
+  } catch (value) {
+    if (current !== preferenceRevision) return
+    if ([401, 403].includes((value as { statusCode?: number }).statusCode || 0)) await refresh()
+  }
+}
 
 function safePlexURL(value?: string) {
   if (!value) return ''
@@ -66,7 +80,8 @@ watch([ready, () => capabilities.value?.subscriptions, () => session.value.user?
   actionRevision++; removing.value = null; changing.value = null; feedback.value = ''
   void load()
 }, { immediate: true })
-onBeforeUnmount(() => { revision++; actionRevision++ })
+watch([ready, () => capabilities.value?.notifications, () => session.value.user?.plexId, () => session.value.plexConnected, () => session.value.user?.discordId], loadPreferences, { immediate: true })
+onBeforeUnmount(() => { revision++; actionRevision++; preferenceRevision++ })
 </script>
 
 <template>
@@ -82,7 +97,7 @@ onBeforeUnmount(() => { revision++; actionRevision++ })
           <div class="subscription-actions"><label v-if="capabilities?.subscriptionNotifications" class="channel-choice"><span>Notifications</span><select :value="item.channel" :disabled="busy" :aria-label="`Canal pour ${item.title}`" @change="changeChannel(item.id, $event)"><option value="hub">Dans Le Hub</option><option value="discord" :disabled="!discordReady">Hub et Discord{{ !discordReady && item.channel === 'discord' ? ' (en pause)' : '' }}</option></select></label><a v-if="item.status === 'available' && safePlexURL(item.url)" :href="safePlexURL(item.url)" target="_blank" rel="noopener noreferrer" class="button secondary">Ouvrir dans Plex <HubIcon name="external" /></a><button class="button secondary" :disabled="busy" :aria-label="`Ne plus suivre ${item.title}`" @click="unsubscribe(item.id)">{{ removing === item.id ? 'Désabonnement…' : 'Ne plus suivre' }}</button></div>
         </article>
       </div>
-      <p v-if="capabilities?.subscriptionNotifications" class="footnote">{{ !preferences ? 'Vérifiez vos préférences ci-dessus pour choisir les messages privés.' : !preferences.enabled ? 'Activez vos notifications ci-dessus pour être prévenu de la disponibilité.' : !discordReady ? 'Pour choisir Discord, liez votre compte et activez les messages privés dans vos préférences.' : 'Vos heures calmes et votre plafond quotidien s’appliquent aux messages privés.' }} <NuxtLink to="/demandes#rappels">Régler mes notifications</NuxtLink></p>
+      <p v-if="capabilities?.subscriptionNotifications" class="footnote">{{ !preferences ? 'Vérifiez vos préférences dans Mon compte pour choisir les messages privés.' : !preferences.enabled ? 'Activez vos notifications dans Mon compte pour être prévenu de la disponibilité.' : !discordReady ? 'Pour choisir Discord, liez votre compte et activez les messages privés dans vos préférences.' : 'Vos heures calmes et votre plafond quotidien s’appliquent aux messages privés.' }} <NuxtLink to="/compte#rappels">Régler mes notifications</NuxtLink></p>
       <div v-if="data.total > data.limit && !error && !loading" class="pagination"><button class="button secondary" :disabled="data.offset === 0" @click="load(Math.max(0, data.offset - data.limit))">Suivis ajoutés précédents</button><span>Page {{ Math.floor(data.offset / data.limit) + 1 }} sur {{ Math.ceil(data.total / data.limit) }}</span><button class="button secondary" :disabled="data.offset + data.limit >= data.total" @click="load(data.offset + data.limit)">Suivis ajoutés suivants</button></div>
     </section>
     <AvailabilityInbox :revision="inboxRevision" />

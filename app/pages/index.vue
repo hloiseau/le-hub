@@ -2,7 +2,6 @@
 import type { Media, RecentPage } from '~/types/api'
 import { downloadRoute } from '~/utils/downloads'
 const { session, services, demo, ready, capabilities, refresh } = useHub()
-const filter = ref('all')
 const recent = ref<Media[]>([])
 const loading = ref(false)
 const message = ref('')
@@ -10,7 +9,7 @@ const nextOffset = ref<number | null>(null)
 const updatedAt = ref('')
 let revision = 0
 let timer: ReturnType<typeof setTimeout> | undefined
-const visible = computed(() => services.value.filter(s => filter.value === 'all' || s.category === filter.value))
+const visible = computed(() => services.value.filter(service => service.url))
 async function loadRecent(offset = 0) {
   const request = ++revision
   if (offset === 0) { clearTimeout(timer); recent.value = []; nextOffset.value = null; updatedAt.value = '' }
@@ -48,20 +47,19 @@ const freshness = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyl
 </script>
 <template>
   <div>
-  <section class="page-heading"><h1>Accueil</h1></section>
-  <section v-if="session.admin && capabilities?.extensionRequests && !demo" class="admin-shortcut" aria-label="Administration"><HubIcon name="requests" /><div><h2>Demandes de délai</h2><p>Examiner les demandes avant les retraits prévus.</p></div><NuxtLink to="/avant-le-depart#extension-admin-heading" class="button primary">Examiner les demandes <HubIcon name="arrow" /></NuxtLink></section>
-  <section class="section-block"><div class="section-heading"><div><h2>Vos services</h2></div><div class="filter-tabs" aria-label="Filtrer les services"><button v-for="f in [{ id: 'all', label: 'Tout' }, { id: 'watch', label: 'Regarder' }, { id: 'read', label: 'Lire' }, { id: 'tools', label: 'Outils' }]" :key="f.id" :aria-pressed="filter === f.id" :class="{ selected: filter === f.id }" @click="filter = f.id">{{ f.label }}</button></div></div><div class="services-grid"><ServiceCard v-for="service in visible" :key="service.id" :service="service" /></div></section>
+  <section class="page-heading page-heading-actions"><h1>Accueil</h1><NuxtLink v-if="session.admin && capabilities?.extensionRequests && !demo" to="/admin/reports" class="button secondary">Demandes de report <HubIcon name="arrow" /></NuxtLink></section>
+  <section v-if="visible.length" class="services-section" aria-labelledby="services-heading"><h2 id="services-heading">Vos services</h2><div class="services-grid"><ServiceCard v-for="service in visible" :key="service.id" :service="service" /></div></section>
   <section class="section-block"><div class="section-heading"><div><h2>Les derniers ajouts</h2></div><span class="subtle-caption">{{ demo ? 'Exemples de contenus' : 'Votre bibliothèque Plex' }}</span></div>
     <p v-if="loading && !recent.length" class="loading" role="status">Chargement des derniers ajouts…</p>
     <div v-else-if="message" class="banner error-banner" role="alert">{{ message }}<button @click="loadRecent()">Réessayer</button></div>
-    <div v-else-if="recent.length" class="media-grid"><article v-for="item in recent" :key="item.id" class="media-card"><component :is="item.url ? 'a' : 'div'" class="media-open" :href="item.url || undefined" :target="item.url ? '_blank' : undefined" :rel="item.url ? 'noopener noreferrer' : undefined"><div class="media-cover"><MediaArtwork :src="item.posterUrl" /><span class="media-kind">{{ kind(item.type) }}</span></div><h3>{{ item.title }}</h3><p>{{ item.subtitle || (item.year ? `${kind(item.type)} · ${item.year}` : kind(item.type)) }}</p><p>Ajouté le <time :datetime="item.addedAt">{{ date(item.addedAt) }}</time></p></component><NuxtLink v-if="capabilities?.downloads && !demo && downloadRoute(item)" :to="downloadRoute(item)!" class="text-button media-download" :aria-label="`Préparer ${item.title} pour un téléchargement`">Préparer un téléchargement <HubIcon name="download" /></NuxtLink></article></div>
+    <div v-else-if="recent.length" class="media-grid"><article v-for="item in recent" :key="item.id" class="media-card"><component :is="item.url ? 'a' : 'div'" class="media-open" :href="item.url || undefined" :target="item.url ? '_blank' : undefined" :rel="item.url ? 'noopener noreferrer' : undefined"><div class="media-cover"><MediaArtwork :src="item.posterUrl" /><span class="media-kind">{{ kind(item.type) }}</span></div><h3>{{ item.title }}</h3><p>{{ item.subtitle || (item.year ? `${kind(item.type)} · ${item.year}` : kind(item.type)) }}</p><p>Ajouté le <time :datetime="item.addedAt">{{ date(item.addedAt) }}</time></p></component><NuxtLink v-if="capabilities?.downloads && !demo && downloadRoute(item)" :to="downloadRoute(item)!" class="button secondary compact media-download" :aria-label="`Préparer ${item.title} pour un téléchargement`">Préparer <HubIcon name="download" /></NuxtLink></article></div>
     <EmptyState v-else-if="!session.user || !session.plexConnected" icon="play" title="Connexion Plex requise" text="Connectez-vous avec Plex pour retrouver les ajouts auxquels vous avez accès."><NuxtLink to="/compte" class="button secondary">Ouvrir mon compte <HubIcon name="arrow" /></NuxtLink></EmptyState>
     <EmptyState v-else title="Pas de nouveauté pour le moment" :text="capabilities?.recent ? 'Les prochains ajouts apparaîtront ici.' : 'La bibliothèque Plex reste à connecter.'" />
     <div v-if="nextOffset !== null && !message" class="recent-pagination"><button class="button secondary" :disabled="loading" @click="nextOffset !== null && loadRecent(nextOffset)">{{ loading ? 'Chargement…' : 'Voir les ajouts suivants' }}</button></div>
     <p v-if="updatedAt && !message" class="recent-freshness muted">Liste vérifiée le {{ freshness(updatedAt) }} · les épisodes d’une même série sont regroupés.</p>
   </section>
   <RecentBooks />
-  <section v-if="capabilities?.departures && !demo" class="section-block"><div class="section-heading"><div><h2>À voir avant leur départ</h2></div></div><DepartureList compact /></section>
+  <section v-if="capabilities?.departures && !demo" class="section-block"><div class="section-heading"><div><h2>Retraits prévus</h2></div></div><DepartureList compact /></section>
     </div>
 </template>
 <style scoped>

@@ -11,8 +11,8 @@ const error = ref('')
 const saved = ref<ExtensionRequest['status'] | null>(null)
 const savedMessage = computed(() => saved.value && {
   pending: 'Demande enregistrée pour examen. Le délai et la conservation du contenu ne sont pas garantis.',
-  reviewed: 'Cette demande a déjà été examinée. Consultez la réponse dans Mes demandes de délai ; la conservation du contenu n’est pas garantie.',
-  declined: 'Cette demande a été refusée. Consultez la réponse dans Mes demandes de délai.',
+  reviewed: 'Cette demande a déjà été examinée. Consultez la réponse dans Mes demandes de report ; la conservation du contenu n’est pas garantie.',
+  declined: 'Cette demande a été refusée. Consultez la réponse dans Mes demandes de report.',
   cancelled: 'Cette demande a été annulée. Elle n’est plus en attente d’examen.',
   expired: 'L’échéance de cette demande est passée. Cela ne confirme pas la suppression du contenu.',
 }[saved.value])
@@ -44,7 +44,7 @@ async function submit() {
   <div class="extension-form">
     <p v-if="saved" class="inline-notice" role="status">{{ savedMessage }}</p>
     <template v-else>
-      <button class="button secondary compact" :aria-expanded="open" :disabled="busy || disabled" @click="open = !open">{{ open ? 'Fermer la demande' : 'Demander un délai' }}</button>
+      <button class="button secondary compact" :aria-expanded="open" :disabled="busy || disabled" @click="open = !open">{{ open ? 'Fermer la demande' : 'Demander un report' }}</button>
       <form v-if="open" novalidate @submit.prevent="submit">
         <p class="muted">Votre demande sera examinée par un administrateur. Elle ne modifie pas automatiquement la date de retrait.</p>
         <label :for="`extension-days-${mediaId}`">Délai souhaité en jours</label>
