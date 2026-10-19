@@ -125,7 +125,7 @@ onBeforeUnmount(() => { revision++; requestRevision++; clearTimeout(expiryTimer)
 
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">ENCORE UN CHAPITRE</p><h1>Vos livres<span>.</span></h1><p class="lede">Votre catalogue Grimmory et vos prochaines envies de lecture.</p></section>
+  <section class="page-heading"><h1>Vos livres<span>.</span></h1><p class="lede">Votre catalogue Grimmory et vos prochaines envies de lecture.</p></section>
   <p v-if="capabilities?.bookCollections"><NuxtLink to="/collections" class="button secondary">Parcourir mes collections <HubIcon name="arrow" /></NuxtLink></p>
   <p v-if="capabilities?.bookRequestTracking"><NuxtLink to="/demandes-livres" class="button secondary">Suivre mes demandes de livres <HubIcon name="arrow" /></NuxtLink></p>
   <div v-if="feedback" class="banner" role="status">{{ feedback }}</div>

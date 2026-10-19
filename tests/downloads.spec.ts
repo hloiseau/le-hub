@@ -286,7 +286,7 @@ test('the expanded navigation keeps account and help reachable in a short viewpo
   const account = sidebar.locator('.account-link')
   await account.scrollIntoViewIfNeeded()
   await expect(account).toBeInViewport()
-  await expect(sidebar.getByRole('link', { name: 'Besoin d’un coup de main ?' })).toBeInViewport()
+  await expect(sidebar.getByRole('link', { name: 'Aide', exact: true })).toBeInViewport()
   await account.click()
   await expect(page).toHaveURL(/\/compte$/)
 })

@@ -2,10 +2,10 @@ import type { Capabilities, Media, RequestPage, Service, Session } from '~/types
 
 const defaults: Service[] = [
   { id: 'plex', name: 'Plex', description: 'Films et séries', category: 'watch' },
-  { id: 'seerr', name: 'Seerr', description: 'Vos envies à l’écran', category: 'watch' },
-  { id: 'downloadarr', name: 'Downloadarr', description: 'À emporter partout', category: 'tools' },
+  { id: 'seerr', name: 'Seerr', description: 'Demandes de films et séries', category: 'watch' },
+  { id: 'downloadarr', name: 'Downloadarr', description: 'Préparation de fichiers', category: 'tools' },
   { id: 'torrent-watch', name: 'Torrent Watch', description: 'Les téléchargements', category: 'tools' },
-  { id: 'shelfmark', name: 'Shelfmark', description: 'Votre prochaine lecture', category: 'read' },
+  { id: 'shelfmark', name: 'Shelfmark', description: 'Demandes de livres', category: 'read' },
   { id: 'grimmory', name: 'Grimmory', description: 'Livres et mangas', category: 'read' },
 ]
 export function useHub() {

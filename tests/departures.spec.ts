@@ -81,7 +81,7 @@ test('home includes personal departures and expired results are withdrawn', asyn
     return route.fulfill({ json: data })
   })
   await page.goto('/')
-  await expect(page.locator('.departure-tile')).toContainText('Vos demandes, suivis et visionnages concernés par un départ estimé.')
+  await expect(page.getByRole('heading', { name: 'À voir avant leur départ', exact: true })).toBeVisible()
   await expect(page.locator('.departure-row:visible')).toHaveCount(2)
   await expect(page.getByRole('link', { name: 'Voir mes départs' })).toBeVisible()
   await expect(page.getByRole('alert')).toContainText('Actualisation indisponible', { timeout: 10_000 })

@@ -7,7 +7,7 @@ const date = (value: string) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'm
 
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">CONSTRUISONS LA SUITE</p><h1>La communauté<span>.</span></h1><p class="lede">Les propositions et problèmes sélectionnés pour les membres du Hub.</p></section>
+  <section class="page-heading"><h1>La communauté<span>.</span></h1><p class="lede">Les propositions et problèmes sélectionnés pour les membres du Hub.</p></section>
   <EmptyState v-if="!enabled" icon="spark" title="La communauté arrive bientôt" text="Les sujets seront visibles quand une sélection sera publiée par votre serveur." />
   <template v-else>
     <section class="panel community-intro"><h2>Une discussion, un seul vote</h2><p>Les discussions, votes et statuts restent dans Discord. Ouvrez le fil avec votre compte Discord pour participer ; Le Hub ne crée aucun vote supplémentaire.</p><p class="muted">Cette sélection est publiée après validation. Elle ne constitue pas une lecture en direct des salons Discord.</p><div class="community-buttons"><button class="button secondary" :disabled="loading" @click="load">Actualiser la communauté</button><NuxtLink to="/roadmap" class="button secondary">Voir la roadmap <HubIcon name="arrow" /></NuxtLink></div></section>

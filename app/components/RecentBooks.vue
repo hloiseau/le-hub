@@ -36,7 +36,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(timer); document.removeEventLis
 </script>
 <template>
   <section v-if="enabled" class="section-block recent-books" aria-labelledby="recent-books-title">
-    <div class="section-heading"><div><span class="eyebrow">POUR LA PROCHAINE PAGE</span><h2 id="recent-books-title">Les derniers livres ajoutés</h2></div><NuxtLink to="/livres" class="text-link">Tous mes livres <HubIcon name="arrow" /></NuxtLink></div>
+    <div class="section-heading"><div><h2 id="recent-books-title">Les derniers livres ajoutés</h2></div><NuxtLink to="/livres" class="text-link">Tous mes livres <HubIcon name="arrow" /></NuxtLink></div>
     <p v-if="loading" role="status">On ouvre votre bibliothèque…</p>
     <div v-else-if="message" role="alert" class="banner error-banner">{{ message }} <button @click="load()">Réessayer les livres</button></div>
     <p v-else-if="!linked">Reliez votre catalogue personnel dans <NuxtLink to="/livres">Livres</NuxtLink> pour découvrir ses derniers ajouts.</p>

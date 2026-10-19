@@ -30,7 +30,7 @@ async function api(page: Page, signedIn = false) {
 test('authenticated home and service filters', async ({ page }, testInfo) => {
   await api(page, true)
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'On regarde quoi ?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Accueil' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Interstellar' })).toBeVisible()
   await page.getByRole('button', { name: 'Lire', exact: true }).click()
   await expect(page.locator('.services-grid .service-card')).toHaveCount(2)
@@ -79,6 +79,27 @@ test('navigation reaches the dedicated monitoring page on small screens', async 
   await page.getByRole('link', { name: 'Consulter les performances' }).click()
   await expect(page.getByRole('heading', { name: 'Les mesures ne sont pas activées' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+})
+
+test('departure navigation is direct and the mobile drawer supports keyboard dismissal', async ({ page, isMobile }) => {
+  await api(page, true)
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Accueil', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Délais à examiner' })).toHaveCount(0)
+  if (isMobile) {
+    await expect(page.locator('#sidebar')).toHaveAttribute('inert', '')
+    const toggle = page.getByRole('button', { name: 'Ouvrir la navigation' })
+    await toggle.click()
+    await expect(page.locator('#sidebar')).not.toHaveAttribute('inert', '')
+    await page.keyboard.press('Escape')
+    await expect(toggle).toBeFocused()
+    await expect(page.locator('#sidebar')).toHaveAttribute('inert', '')
+    await toggle.click()
+  }
+  await page.getByRole('navigation').getByRole('link', { name: 'Avant leur départ', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Avant leur départ.' })).toBeVisible()
+  await expect(page.locator('.breadcrumb')).toContainText('Avant leur départ')
+  if (isMobile) await expect(page.locator('#sidebar')).toHaveAttribute('inert', '')
 })
 
 test('Seerr association can be retried after signing in with Plex', async ({ page }) => {

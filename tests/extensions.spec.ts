@@ -107,6 +107,29 @@ test('admin records a response without claiming to retain media', async ({ page 
   await expect(queue.getByText('Aucune demande en attente.')).toBeVisible()
 })
 
+test('admin reaches the delay queue from home and loses shortcuts after revocation', async ({ page, isMobile }, testInfo) => {
+  const state = await signedIn(page, true)
+  let adminReads = 0
+  await page.route('**/api/v1/admin/extension-requests', route => {
+    adminReads++
+    return route.fulfill({ json: { items: [request()] } })
+  })
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Examiner les demandes', exact: true }).click()
+  const queue = page.getByRole('region', { name: 'Demandes à examiner' })
+  await expect(queue).toBeVisible()
+  await expect(queue.getByText('Alice', { exact: false })).toBeVisible()
+  await expect.poll(() => adminReads).toBe(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('admin-navigation.png'), fullPage: true })
+  if (isMobile) await page.getByRole('button', { name: 'Ouvrir la navigation' }).click()
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Délais à examiner' })).toBeVisible()
+  state.admin = false
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  await expect(page.getByRole('link', { name: 'Délais à examiner' })).toHaveCount(0)
+  await expect(queue).toHaveCount(0)
+})
+
 test('admin refusal and authorization revocation clear the queue', async ({ page }) => {
   const state = await signedIn(page, true)
   let refused = false

@@ -42,7 +42,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(timer); document.removeEventLis
 
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">LE FIL DE VOS HISTOIRES</p><h1>Vos collections<span>.</span></h1><p class="lede">Les séries et tomes présents dans votre catalogue personnel Grimmory.</p></section>
+  <section class="page-heading"><h1>Vos collections<span>.</span></h1><p class="lede">Les séries et tomes présents dans votre catalogue personnel Grimmory.</p></section>
   <div class="collection-links"><NuxtLink to="/livres" class="button secondary">Gérer mon accès et mes livres <HubIcon name="arrow" /></NuxtLink><NuxtLink to="/guides/kobo" class="button secondary">Lire sur Kobo <HubIcon name="arrow" /></NuxtLink></div>
   <EmptyState v-if="!enabled" icon="book" title="Collections à connecter" text="Les séries de votre catalogue apparaîtront après configuration de Grimmory et association de vos identifiants OPDS personnels." />
   <template v-else>

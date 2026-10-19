@@ -10,8 +10,8 @@ export default defineNuxtConfig({
   },
   app: { head: {
     htmlAttrs: { lang: 'fr' },
-    title: 'Le Hub · Votre espace multimédia',
-    meta: [{ name: 'description', content: 'Vos films, séries et lectures. Tous vos services, au même endroit.' }, { name: 'theme-color', content: '#11121b' }],
+    title: 'Le Hub · Administration multimédia',
+    meta: [{ name: 'description', content: 'Demandes, retraits, téléchargements et suivi du serveur multimédia.' }, { name: 'theme-color', content: '#101412' }],
   } },
   routeRules: { '/**': { headers: { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY' } } },
   typescript: { strict: true },

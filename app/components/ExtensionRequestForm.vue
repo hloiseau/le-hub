@@ -59,5 +59,5 @@ async function submit() {
   </div>
 </template>
 <style scoped>
-.extension-form{width:100%}.extension-form form{display:grid;gap:10px;margin-top:16px;max-width:600px}.extension-form p{font-size:12px;line-height:1.7}.extension-form label{font-size:13px}.extension-form input,.extension-form textarea{box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--text);font:inherit;max-width:100%}.extension-form textarea:focus-visible{outline:3px solid var(--mint);outline-offset:5px}.extension-form input{width:100px}.extension-form textarea{width:100%;resize:vertical}.extension-form .button{justify-self:start}.error{color:var(--danger,#ff9c9c)}
+.extension-form{width:100%}.extension-form form{display:grid;gap:10px;margin-top:16px;max-width:600px}.extension-form p{font-size:12px;line-height:1.7}.extension-form label{font-size:13px}.extension-form input,.extension-form textarea{box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--text);font:inherit;max-width:100%}.extension-form textarea:focus-visible{outline:3px solid var(--signal);outline-offset:5px}.extension-form input{width:100px}.extension-form textarea{width:100%;resize:vertical}.extension-form .button{justify-self:start}.error{color:var(--danger,#ff9c9c)}
 </style>

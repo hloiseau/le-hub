@@ -71,7 +71,7 @@ const streamDecisionLabels = { 'direct play': 'Lecture directe', copy: 'Copie sa
 </script>
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">DANS LES COULISSES</p><h1>Les performances<span>.</span></h1><p class="lede">L’activité du serveur, ses mesures et leurs évolutions sur sept jours.</p></section>
+  <section class="page-heading"><h1>Les performances<span>.</span></h1><p class="lede">L’activité du serveur, ses mesures et leurs évolutions sur sept jours.</p></section>
   <p v-if="!ready" role="status">Chargement des performances…</p>
   <EmptyState v-else-if="!session.user || !session.plexConnected" icon="chart" title="Connectez-vous avec Plex" text="Votre connexion Plex donne accès à l’activité du serveur." />
   <EmptyState v-else-if="!enabled" icon="chart" title="Les mesures ne sont pas activées" text="Aucune source de mesures n’est activée pour le Hub. L’administrateur peut relier l’activité Plex et les capteurs du serveur." />

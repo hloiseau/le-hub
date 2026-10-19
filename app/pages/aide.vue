@@ -1,6 +1,6 @@
 <template>
   <div>
-  <section class="page-heading"><p class="eyebrow">LE PETIT GUIDE</p><h1>On vous aide<span>.</span></h1><p class="lede">Quelques repères pour profiter de votre espace.</p></section>
+  <section class="page-heading"><h1>Aide</h1><p class="lede">Services, accès et commandes Discord.</p></section>
   <div class="guide-grid">
     <article class="panel"><span class="step-number">01</span><h2>Pour regarder</h2><p>Ouvrez Plex depuis l’accueil. Seerr vous permet de demander un film ou une série qui ne se trouve pas encore dans la bibliothèque.</p></article>
     <article class="panel"><span class="step-number">02</span><h2>Pour suivre une demande</h2><p>Connectez-vous au Hub avec Plex. Votre compte Seerr est associé automatiquement. Retrouvez vos films et séries dans <NuxtLink to="/demandes">Mes demandes</NuxtLink>, avec les réglages de notifications. Si vous n’avez jamais utilisé Seerr, ouvrez-le et connectez-vous une première fois avec le même compte Plex, puis actualisez l’association dans <NuxtLink to="/compte">Mon compte</NuxtLink>.</p></article>
