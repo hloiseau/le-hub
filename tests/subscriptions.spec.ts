@@ -19,6 +19,24 @@ async function signedIn(page: Page, enabled = true, notifications = false) {
 const inbox = (items: object[] = []) => ({ items, updatedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 60_000).toISOString() })
 const notice = { subscriptionId: 1, type: 'movie', tmdbId: 12, title: 'Le film arrivé', url: 'https://app.plex.tv/desktop/#!/server/fixture/details?key=42', availableAt: '2026-10-16T12:00:00Z', deliveredAt: '2026-10-16T12:00:00Z' }
 
+for (const persistent of [false, true]) {
+  test(`notification help reflects persistent Plex authorization: ${persistent}`, async ({ page }) => {
+    await signedIn(page, true, true)
+    await page.route('**/api/v1/capabilities', route => route.fulfill({ json: { plexLink: true, notifications: true, discordChannelReminders: true, persistentPlexAuthorization: persistent } }))
+    await page.goto('/compte#rappels')
+    await page.getByText('Fonctionnement des rappels', { exact: true }).click()
+    if (persistent) {
+      await expect(page.locator('#rappels')).toContainText('Les rappels continuent quand le Hub est fermé, après 12 heures et après un redémarrage.')
+      await expect(page.locator('#rappels')).toContainText('« Déconnexion »')
+      await expect(page.locator('#rappels')).not.toContainText('Gardez une connexion Plex active')
+    } else {
+      await expect(page.locator('#rappels')).toContainText('Gardez une connexion Plex active')
+      await expect(page.locator('#rappels')).not.toContainText('Les rappels continuent quand le Hub est fermé')
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  })
+}
+
 test('Seerr requests are followed automatically without adding IDs or creating subscriptions', async ({ page }, testInfo) => {
   await signedIn(page)
   const mutations: string[] = []

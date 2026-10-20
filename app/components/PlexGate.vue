@@ -50,6 +50,7 @@ async function poll() {
         <button v-if="error" class="button secondary" @click="refresh">Réessayer</button>
       </template>
       <p class="login-note">Votre mot de passe reste chez Plex.</p>
+      <p v-if="capabilities?.persistentPlexAuthorization" class="footnote">L’autorisation Plex est conservée chiffrée pour les rappels, même quand le Hub est fermé. « Déconnexion » l’efface et arrête les rappels.</p>
     </section>
   </main>
 </template>

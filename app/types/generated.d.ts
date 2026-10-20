@@ -786,6 +786,8 @@ export interface components {
             bookRequestTracking?: boolean;
             downloads?: boolean;
             discordChannelReminders: boolean;
+            /** @description Plex authorization is encrypted at rest and survives browser expiry and API restart. Explicit logout, account deletion or Plex revocation stops it. Browser sessions still expire after 12 hours. */
+            persistentPlexAuthorization?: boolean;
         };
         Media: {
             id: string;

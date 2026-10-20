@@ -40,6 +40,15 @@ test('authenticated home and service filters', async ({ page }, testInfo) => {
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: testInfo.outputPath('home.png'), fullPage: true })
 })
+
+test('Plex login explains background authorization before connecting', async ({ page }) => {
+  await api(page)
+  await page.route('**/api/v1/capabilities', route => route.fulfill({ json: { plexLink: true, persistentPlexAuthorization: true } }))
+  await page.goto('/')
+  await expect(page.getByRole('button', { name: 'Se connecter avec Plex' })).toBeVisible()
+  await expect(page.locator('.login-card')).toContainText('L’autorisation Plex est conservée chiffrée')
+  await expect(page.locator('.login-card')).toContainText('« Déconnexion » l’efface et arrête les rappels.')
+})
 test('personal requests render safely and filter by status', async ({ page }, testInfo) => {
   await api(page, true)
   await page.goto('/demandes')
