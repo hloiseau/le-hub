@@ -1,38 +1,24 @@
 # Roadmap — Le Hub
 
-16 issues de développement, dont la priorité « Avant leur départ ». Le statut actuel est celui de chaque issue GitHub ; cette page organise le périmètre, sans échéances promises.
+## État vérifié au 22 octobre 2026
 
-Priorité confirmée le 18 octobre : films/séries, notifications Discord et fiabilité du Hub d'abord. Les livres, utilisés uniquement par l'administrateur, passent en dernier. Le travail de correspondance des demandes avec le catalogue reste conservé localement, sans déploiement. Les phases ci-dessous gardent leur numérotation historique.
+Le Hub installé est `d86b929` ([PR #41](https://github.com/hloiseau/le-hub/pull/41)). API/bot Concierge : `20f96b6` ; runtime Eris : `5dd08ded`. Les quatre services sont sains. Le [bilan commun](https://github.com/hloiseau/le-concierge/blob/main/docs/status-2026-10-22.md) décrit les versions, livraisons, preuves et limites ; il remplace les notes de travail du 19 octobre, conservées dans l’historique Git.
 
-Les dépendances sont des liens vers les issues des deux dépôts. Les références Cxx/Hxx permettent de relier le découpage initial aux numéros GitHub.
+### Livré
 
-## En cours — finition UI/UX
+- PR #38 : présentation inspirée d’Ouicheur, slogans retirés, accès administrateur aux délais.
+- PR #39 : Retraits prévus et Demandes de report distincts, notifications dans Mon compte, pages intermédiaires retirées, boutons Livres espacés, six courbes de Performances, lien de roadmap masqué si vide.
+- PR #40 : réglages des notifications regroupés et simplifiés, délais par boutons, options avancées repliables.
+- PR #41 avec Concierge #55 : information sur les autorisations Plex chiffrées persistantes et leur effacement par déconnexion. Les rappels peuvent continuer sans navigateur et après redémarrage.
+- Concierge #54 : listes personnelles de retraits réparées ; exclusion des contenus terminés et non vérifiables pour les notifications Hub, DM et salon. La liste complète des retraits reste distincte de celle des notifications ; ce filtre ne demande pas d’activer une nouvelle option.
 
-Demande du 19 octobre 2026 : faire une passe de finition UI/UX du Hub, jugé encore insuffisant par l'utilisateur. Examiner la lisibilité, la hiérarchie des informations, la navigation, la cohérence des actions et les parcours ordinateur/mobile, en gardant une interface simple et des composants partagés. Inclure la visibilité des demandes de délai côté administrateur dans le prochain lot fonctionnel.
+### Recette et suite
 
-Le 19 octobre, l'utilisateur a demandé de commencer : rangement, finition UI/UX et visibilité des délais administrateur, recette réelle, Eris, roadmap publique et monitoring, puis livres. Direction demandée ensuite : reprendre les codes visuels d’Ouicheur et supprimer les slogans commerciaux, pour une interface d’administration. Direction demandée ensuite : reprendre les codes visuels d’Ouicheur et supprimer les slogans commerciaux, pour une interface d’administration. La note initiale est conservée ; cette passe fait désormais l'objet d'une branche dédiée, distincte de la version installée.
+Deux comptes ont été contrôlés le 20 octobre : associations Seerr, demandes et retraits personnels, accès administrateur refusé au membre ordinaire, déconnexion isolée, conservation des autorisations après redémarrage API. Navigation Compte, Demandes, Retraits, Performances et Livres sur ordinateur sans erreur JavaScript ni débordement. Les tests automatisés des PR couvrent ordinateur et mobile.
 
-## Avancement vérifié au 19 octobre 2026
+La réception réelle des DM n’a pas été testée ; le second compte avait ses notifications désactivées et n’a pas lié Discord. La roadmap publique n’était pas configurée lors de cette recette. Les sondes n’ont créé aucun téléchargement, demande ni message de test.
 
-### Finition proposée — non encore déployée
-
-La branche `feat/hub-navigation-and-admin-delays` reprend la palette sombre d'Ouicheur, augmente la lisibilité des contrôles et retire les slogans ainsi que le bandeau décoratif de l'accueil. Les départs ont une entrée directe dans la navigation ; l'administration dispose d'un raccourci vers les demandes de délai, également placées en tête de la page. Les liens administrateur disparaissent après révocation ; la navigation mobile fermée ne reçoit plus le focus clavier et se ferme avec Échap.
-
-Validation locale : lint, types, build et 314 scénarios Playwright ordinateur/mobile réussis ; captures accueil et file administrateur examinées. Les sources des tests sont simulées. La recette réelle à deux comptes autorisés attend des sessions authentifiées accessibles ; aucun navigateur connecté n'est disponible dans cette session d'exécution. Les vérifications NAS en lecture seule restent distinctes.
-
-### Installation existante
-
-Contrôle en lecture seule : Hub `64b51c7` (PR #37), API et bot `5828794` (Concierge #51), soit les derniers `main` à cette date. Les trois conteneurs sont sains, sans redémarrage ni OOM depuis le 18 octobre à 23 h 11 (Europe/Paris). Le Hub répond en HTTPS ; dix commandes Discord sont enregistrées, dont `/salons`. Le bot s'appelle Eris, mais son chat et son moteur ne sont pas encore installés. Les sondes ne valident pas les parcours personnels.
-
-La [PR Hub #29](https://github.com/hloiseau/le-hub/pull/29) et la [PR Concierge #40](https://github.com/hloiseau/le-concierge/pull/40) sont fusionnées et leurs images `edge` publiées. Elles raccordent demandes, nouveautés, rappels, suivis, livres/collections, suivi Shelfmark, performances, communauté et téléchargements personnels. Les tests navigateur couvrent ordinateur et mobile avec sources simulées. Le [suivi détaillé backend](https://github.com/hloiseau/le-concierge/blob/main/docs/roadmap.md) distingue parcours livrés, configuration nécessaire et limites restantes.
-
-La livraison précédente correspondait aux [PR Hub #36](https://github.com/hloiseau/le-hub/pull/36) et [Concierge #49](https://github.com/hloiseau/le-concierge/pull/49). API, bot et Hub passent leurs sondes. Le filtre des demandes Seerr porte sur toute la liste ; les variantes 4K/Standard sont distinguées lorsqu’elles sont connues. Neuf commandes Discord sont synchronisées, dont `/a-voir`, privée. L’aide explique le partage facultatif des nouveautés, surprises et récapitulatifs. Les détails administrateur des performances distinguent les décisions audio/vidéo. Ce lot est couvert par 280 scénarios navigateur ordinateur/mobile, sans publication dans un vrai salon pendant les tests.
-
-**Lot fusionné et déployé — Hub #37 / Concierge #50 :** annulation des demandes de délai en attente par leur propriétaire, états annulé/échu et conservation de l’historique via la migration backend v7 ; recherche, type et échéance à 7/30 jours dans les départs ; aide pour `/mes-demandes etat` et sa pagination filtrée. Les forums autorisés **problèmes-techniques** et **idées-évolutions** sont synchronisés toutes les deux minutes avec revalidation des permissions ; leur publication est fraîche au contrôle du 19 octobre. Les votes restent dans Discord ; la sélection des issues de roadmap est encore vide.
-
-Les images installées Grimmory v3.5.0 et Shelfmark v1.4.0 correspondent aux sources auditées. Les routes personnelles refusent les lectures anonymes ; connexion OPDS/Shelfmark et isolation entre deux comptes restent non validées. Les imports Grimmory restent explicitement non vérifiés sans corrélation amont ; aucune liste de tomes manquants ou de nouvelles sorties n’est inventée. Le statut Kobo n’est pas simulé. Le contrat personnel Downloadarr est fusionné dans la [PR amont #1](https://github.com/hloiseau/LibraryDownloadarr/pull/1), publié sur `quality-preview` et son fonctionnement confirmé par l’administrateur après installation. La recette à deux comptes et des transferts longs reste ouverte. La synchronisation communautaire est active ; la sélection de roadmap reste à définir. Les pages effacent les données expirées, révoquées et les réponses tardives après déconnexion.
-
-Le collecteur hôte fonctionne chaque minute sur le NAS. Quatorze clés hôte/Plex/GPU ont été vérifiées disponibles dans l’historique SQLite : CPU, température, charge, RAM, réseau, stockage, activité Plex, puissance et fréquence GPU. La collecte couvre les cinq disques du pool, sans les disques de démarrage, et sa capacité ZFS ; elle n’a reçu aucun privilège supplémentaire et l’API lit son dossier sans pouvoir y écrire. Le raccordement GPU est déployé et réutilise l’API Toparr existante sur l’Arc A310 ; le Hub distingue la fraîcheur de cette source des autres mesures. Le rendu sous charge réelle reste à recetter. Les droits personnels, la réception des rappels et les bibliothèques de deux comptes réels ne sont pas validés par ces contrôles d’exploitation.
+Restent les recettes de rappels consentis et révocation (#16), les graphiques et la coexistence Plex/A310 sous charge prolongée (#11/#12), la sélection publique des issues (#14), puis les livres (#8–#10), en dernier selon la priorité utilisateur. Les difficultés conversationnelles d’Eris sont suivies dans [Concierge #62](https://github.com/hloiseau/le-concierge/issues/62). Les phases ci-dessous gardent leur numérotation historique ; aucun calendrier n’est promis.
 
 ## Phase 2 — Portail V0 / V1
 
