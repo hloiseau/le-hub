@@ -41,11 +41,13 @@ Le Dockerfile produit une image non-root contenant seulement `.output`. La CI co
 
 Les exemples Compose, TrueNAS et Caddy communs sont dans [le guide de déploiement du Concierge](https://github.com/hloiseau/le-concierge/blob/main/docs/deployment.md). L'API interne du bot n'est jamais relayée par le Hub. Le proxy conserve cookies, origine et redirections HTTP ; il ne doit pas suivre le redirect de connexion Plex côté serveur.
 
-## Dépendances — constat du 15 octobre 2026
+## Dépendances — constat du 24 octobre 2026
 
-Le contrôle npm du graphe de dépendances de construction a signalé deux avis amont : `braces <=3.0.3` ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)) et `node-forge <=1.4.0` ([GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv)), avec propagation à plusieurs packages Nuxt/Nitro. Les dernières versions retournées par le registre à cette date étaient encore concernées. Aucun downgrade automatique n'a été effectué.
+Nuxt passe à 4.6.2 ; Node reste en 24 et TypeScript en 5.9. Les Actions CI sont actualisées séparément du runtime applicatif. Lint, typecheck, build et les 330 tests navigateur ordinateur/mobile passent localement avec Node 24.
 
-Ces packages ne figurent pas dans le manifeste des dépendances de la sortie standalone `.output` examinée, qui est la seule arborescence copiée dans l'image d'exécution. Cela ne remplace pas un audit complet. Le serveur de développement reste lié à la boucle locale et les builds doivent utiliser des sources de confiance. Dependabot suit les correctifs amont.
+`npm audit` remonte encore sept entrées de gravité haute liées au même avis transitif `node-forge <=1.4.0` ([GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv)), propagé via listhen/Nitro/Nuxt. L’avis ne fournit pas de version corrigée à cette date. La suggestion automatique de retour à Nuxt 4.1.3 n’est pas appliquée : elle ne constitue pas une validation de compatibilité ni de correction de ce graphe.
+
+La recherche de `node-forge` dans la sortie standalone `.output` construite ne trouve aucune référence. Cette sortie est la seule arborescence copiée dans l’image d’exécution ; ce contrôle ne remplace pas un audit complet. Le serveur de développement reste lié à la boucle locale et les builds doivent utiliser des sources de confiance. Dependabot suit les correctifs amont. Les migrations Node 26, types Node 26 et TypeScript 7 demandent un lot distinct, cohérent avec le moteur déclaré et sa CI.
 
 ## État réel des fonctions
 
