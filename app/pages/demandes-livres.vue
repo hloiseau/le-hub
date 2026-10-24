@@ -12,6 +12,7 @@ const password = ref('')
 const error = ref('')
 const feedback = ref('')
 const data = ref<BookRequestPage | null>(null)
+const catalogExpiresAt = ref('')
 let revision = 0
 let expiryTimer: ReturnType<typeof setTimeout> | undefined
 const requestLabels: Record<string, string> = { pending: 'En attente de validation', fulfilled: 'Demande prise en charge', rejected: 'Demande refusée', cancelled: 'Demande annulée' }
@@ -32,12 +33,17 @@ async function failure(value: unknown) {
 }
 async function load(page = 1) {
   const current = ++revision
-  data.value = null; error.value = ''; loading.value = false
+  data.value = null; catalogExpiresAt.value = ''; error.value = ''; loading.value = false
   if (!enabled.value || !linked.value || !session.value.user) return
   loading.value = true
   try {
     const result = await $fetch<BookRequestPage>('/api/v1/book-requests', { query: { page }, retry: 0 })
-    if (current === revision) data.value = result
+    if (current !== revision) return
+    let catalogLink: BookLinkStatus | undefined
+    if (result.items.some(item => item.catalogMatch)) {
+      try { catalogLink = await $fetch<BookLinkStatus>('/api/v1/books/link', { retry: 0 }) } catch { /* Hide catalog details when personal access cannot be checked. */ }
+    }
+    if (current === revision) { catalogExpiresAt.value = catalogLink?.linked ? catalogLink.expiresAt || '' : ''; data.value = result }
   } catch (value) { if (current === revision) await failure(value) }
   finally { if (current === revision) loading.value = false }
 }
@@ -77,6 +83,7 @@ async function unlink() {
   } catch (value) { if (current === revision) await failure(value) }
   finally { if (current === revision) saving.value = false }
 }
+function catalogChanged(message: string) { feedback.value = message; void load(data.value?.page || 1) }
 watch([ready, enabled, () => session.value.user?.plexId, () => session.value.plexConnected], initialize, { immediate: true, flush: 'sync' })
 onBeforeUnmount(() => { revision++; clearTimeout(expiryTimer); password.value = ''; username.value = '' })
 </script>
@@ -109,7 +116,7 @@ onBeforeUnmount(() => { revision++; clearTimeout(expiryTimer); password.value = 
       <article v-for="item in data.items" :key="item.id" class="panel request-card">
         <h3>{{ item.title }}</h3><p v-if="item.authors.length" class="muted">{{ item.authors.join(', ') }}</p>
         <p><strong>{{ requestLabels[item.status] || 'État inconnu' }}</strong> · {{ deliveryLabels[item.deliveryState] || 'Livraison non vérifiée' }}</p>
-        <p class="muted">Présence dans le catalogue Grimmory : non vérifiée.</p>
+        <BookRequestCatalog :request="item" :request-page="data.page" :catalog-expires-at="catalogExpiresAt" :disabled="saving || loading" @changed="catalogChanged" @reload="load(data?.page || 1)" />
         <dl><div><dt>Demande créée</dt><dd>{{ date(item.createdAt) }}</dd></div><div v-if="item.reviewedAt"><dt>Décision Shelfmark</dt><dd>{{ date(item.reviewedAt) }}</dd></div><div v-if="item.deliveryUpdatedAt"><dt>Dernier état de livraison</dt><dd>{{ date(item.deliveryUpdatedAt) }}</dd></div></dl>
       </article>
     </div>

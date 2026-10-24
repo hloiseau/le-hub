@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Book, BookPage, BookLinkStatus, BookRequestLink } from '~/types/api'
+import type { BookPage, BookLinkStatus, BookRequestLink } from '~/types/api'
 
 const { session, services, capabilities, ready, demo, refresh } = useHub()
 const catalogEnabled = computed(() => !demo.value && capabilities.value?.booksCatalog === true)
@@ -20,19 +20,10 @@ const activeSearch = ref('')
 const requestSearch = ref('')
 const data = ref<BookPage | null>(null)
 const requestLink = ref<BookRequestLink | null>(null)
-const failedCovers = ref<string[]>([])
 let revision = 0
 let requestRevision = 0
 let expiryTimer: ReturnType<typeof setTimeout> | undefined
 
-function safeBookURL(book: Book) {
-  if (!book.url || !grimmory.value) return ''
-  try {
-    const base = new URL(grimmory.value); const url = new URL(book.url)
-    return ['http:', 'https:'].includes(url.protocol) && url.origin === base.origin && !url.username && !url.password && url.pathname === `${base.pathname.replace(/\/$/, '')}/book/${book.id}` ? url.href : ''
-  } catch { return '' }
-}
-function safeCover(book: Book) { return book.coverUrl === `/api/v1/books/${book.id}/cover` && /^[1-9]\d*$/.test(book.id) && !failedCovers.value.includes(book.id) ? book.coverUrl : '' }
 function safeRequestURL(value: string) {
   if (!shelfmark.value) return ''
   try {
@@ -55,7 +46,7 @@ async function failure(value: unknown) {
 }
 async function load(page = 1) {
   const current = ++revision
-  data.value = null; error.value = ''; loading.value = false; failedCovers.value = []
+  data.value = null; error.value = ''; loading.value = false
   if (!catalogEnabled.value || !linked.value || !session.value.user) return
   loading.value = true
   try {
@@ -148,11 +139,7 @@ onBeforeUnmount(() => { revision++; requestRevision++; clearTimeout(expiryTimer)
     <form class="book-form book-search" @submit.prevent="searchBooks"><label>Titre, auteur, série ou ISBN<input v-model="search" type="search" maxlength="200" :disabled="loading || saving" /></label><button class="button secondary" type="submit" :disabled="loading || saving">Rechercher les livres</button></form>
     <p v-if="loading" class="loading" role="status">Consultation de votre catalogue…</p>
     <div v-else-if="data?.items.length" class="book-grid">
-      <article v-for="book in data.items" :key="book.id" class="panel book-card">
-        <img v-if="safeCover(book)" :src="safeCover(book)" alt="" loading="lazy" class="book-cover" @error="failedCovers.push(book.id)" />
-        <div v-else class="book-cover book-placeholder" aria-hidden="true"><HubIcon name="book" /></div>
-        <div class="book-info"><h3>{{ book.title }}</h3><p v-if="book.authors.length">{{ book.authors.join(', ') }}</p><p v-if="book.series" class="muted">{{ book.series }}<span v-if="book.volume"> · Tome {{ book.volume }}</span></p><p v-if="book.isbn" class="muted">ISBN {{ book.isbn }}</p><p class="book-formats">{{ book.formats.length ? book.formats.join(' · ') : 'Aucun format proposé' }}</p><a v-if="safeBookURL(book)" :href="safeBookURL(book)" target="_blank" rel="noopener noreferrer" class="button secondary">Ouvrir dans Grimmory <HubIcon name="external" /></a></div>
-      </article>
+      <BookCard v-for="book in data.items" :key="book.id" :book="book" />
     </div>
     <EmptyState v-else-if="data && !error" icon="book" title="Aucun livre sur cette page" text="Essayez un autre titre, auteur, série ou ISBN. Les droits de votre compte peuvent aussi limiter les résultats." />
     <div v-if="data && !loading && (data.page > 1 || data.hasMore)" class="pagination"><button class="button secondary" :disabled="data.page <= 1" @click="load(data.page - 1)">Page précédente</button><span>Page {{ data.page }}</span><button class="button secondary" :disabled="!data.hasMore || data.page >= 1001" @click="load(data.page + 1)">Page suivante</button></div>
@@ -167,5 +154,5 @@ onBeforeUnmount(() => { revision++; requestRevision++; clearTimeout(expiryTimer)
 </template>
 
 <style scoped>
-.book-connection p,.book-request p{font-size:13px;line-height:1.7}.book-form{display:flex;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-top:20px}.book-form label{display:grid;gap:8px;font-size:12px;flex:1;min-width:160px}.book-form input{width:100%;max-width:none;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;min-height:44px}.book-form input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.book-search{margin-bottom:24px}.book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.book-card{display:flex;gap:18px;padding:20px;align-items:flex-start}.book-cover{width:88px;height:132px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--panel2)}.book-placeholder{display:flex;align-items:center;justify-content:center;color:var(--muted)}.book-placeholder svg{width:30px;height:30px}.book-info{min-width:0}.book-info h3{font-size:16px;line-height:1.5;overflow-wrap:anywhere;margin:0 0 9px}.book-info p{font-size:12px;line-height:1.6;overflow-wrap:anywhere}.book-formats{font-weight:600}.book-info .button{font-size:11px;padding:10px;white-space:normal}.book-request{margin-top:32px}.book-request-confirm{margin-top:18px;padding:16px;background:var(--panel2);border-radius:8px}.pagination{flex-wrap:wrap}.book-connection .section-heading{flex-wrap:wrap;gap:12px}@media(max-width:950px){.book-grid{grid-template-columns:1fr}}@media(max-width:600px){.book-form{align-items:stretch;flex-direction:column}.book-form label{min-width:0}.book-cover{width:66px;height:99px}.book-card{gap:12px;padding:16px}.book-info .button{max-width:100%}.book-connection,.book-request{padding:20px}.book-form .button,.book-request-confirm .button{white-space:normal}}
+.book-connection p,.book-request p{font-size:13px;line-height:1.7}.book-form{display:flex;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-top:20px}.book-form label{display:grid;gap:8px;font-size:12px;flex:1;min-width:160px}.book-form input{width:100%;max-width:none;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;min-height:44px}.book-form input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.book-search{margin-bottom:24px}.book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.book-request{margin-top:32px}.book-request-confirm{margin-top:18px;padding:16px;background:var(--panel2);border-radius:8px}.pagination{flex-wrap:wrap}.book-connection .section-heading{flex-wrap:wrap;gap:12px}@media(max-width:950px){.book-grid{grid-template-columns:1fr}}@media(max-width:600px){.book-form{align-items:stretch;flex-direction:column}.book-form label{min-width:0}.book-cover{width:66px;height:99px}.book-request{padding:20px}.book-form .button,.book-request-confirm .button{white-space:normal}}
 </style>
