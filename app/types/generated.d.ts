@@ -721,6 +721,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/book-requests/{id}/catalog-match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Confirm an explicitly selected edition after rereading the owner’s fulfilled/complete Shelfmark request and personal OPDS page. No title or ISBN matching. Both personal grants and same-origin request are required. Produces one durable book availability event per retained request/edition pair; does not send a notification. */
+        post: operations["confirmBookRequestCatalogMatch"];
+        /** @description Withdraw the active association for the current personal source accounts. Cancels its availability event; retained provenance expires after 90 days. */
+        delete: operations["removeBookRequestCatalogMatch"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1424,8 +1442,12 @@ export interface components {
             reviewedAt?: string;
             /** Format: date-time */
             deliveryUpdatedAt?: string;
-            /** @enum {string} */
-            catalogStatus: "unverified";
+            /**
+             * @description available requires a verified personal catalogue observation less than five minutes old; a retained association alone is not import proof.
+             * @enum {string}
+             */
+            catalogStatus: "unverified" | "available" | "check_required";
+            catalogMatch?: components["schemas"]["BookCatalogMatch"];
         };
         BookRequestPage: {
             items: components["schemas"]["BookRequest"][];
@@ -1514,6 +1536,33 @@ export interface components {
             checkedAt: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        BookCatalogMatch: {
+            /** @description Only populated while the personal catalogue verification is fresh; null when rechecking is required. */
+            book: components["schemas"]["Book"] | null;
+            /** @enum {string} */
+            method: "user_confirmed";
+            /** Format: date-time */
+            confirmedAt: string;
+            /**
+             * Format: date-time
+             * @description Last successful personal verification, not a Shelfmark import timestamp. Availability expires five minutes after this timestamp.
+             */
+            verifiedAt: string | null;
+        };
+        BookCatalogMatchResult: {
+            /**
+             * @description available requires a verified personal catalogue observation less than five minutes old; a retained association alone is not import proof.
+             * @enum {string}
+             */
+            catalogStatus: "unverified" | "available" | "check_required";
+            catalogMatch: components["schemas"]["BookCatalogMatch"];
+        };
+        BookCatalogMatchInput: {
+            requestPage: number;
+            bookId: string;
+            catalogPage: number;
+            catalogQuery: string;
         };
     };
     responses: never;
@@ -3236,6 +3285,70 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MutationOK"];
                 };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    confirmBookRequestCatalogMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookCatalogMatchInput"];
+            };
+        };
+        responses: {
+            /** @description Verified personal correspondence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookCatalogMatchResult"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    removeBookRequestCatalogMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Association removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error with stable code and French message */
             default: {

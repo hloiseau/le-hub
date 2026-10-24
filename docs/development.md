@@ -28,7 +28,9 @@ Les tests navigateur couvrent les versions ordinateur et mobile, les états anon
 
 Pour une installation de Chromium déjà disponible, `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` permet d'utiliser son chemin. L'exécution locale de cette première version a utilisé Chromium 153 fourni séparément après échec du téléchargement standard de Playwright ; la CI utilise le navigateur installé par Playwright.
 
-Le contrat `api/openapi.json` (version 0.9.0) vient du Concierge. Les types `app/types/generated.d.ts` sont générés via openapi-typescript ; `app/types/api.ts` les réexporte avec les libellés français. En cas d'évolution du backend, recopier son contrat versionné, régénérer, puis vérifier les usages TypeScript. La CI vérifie qu'une génération ne modifie pas le fichier committé. La synchronisation entre dépôts n'est pas automatisée.
+Le contrat `api/openapi.json` (version 0.11.0) vient du Concierge. Les types `app/types/generated.d.ts` sont générés via openapi-typescript ; `app/types/api.ts` les réexporte avec les libellés français. En cas d'évolution du backend, recopier son contrat versionné, régénérer, puis vérifier les usages TypeScript. La CI vérifie qu'une génération ne modifie pas le fichier committé. La synchronisation entre dépôts n'est pas automatisée.
+
+Le suivi des demandes de livres permet de choisir une édition accessible dans son catalogue personnel après livraison Shelfmark. La disponibilité exige une preuve backend de moins de cinq minutes ; ses détails disparaissent aussi après suspension d’un onglet ou régression de la livraison. La confirmation ne prouve pas l’identité du fichier importé automatiquement. Ce lot nécessite le backend 0.11.0 et sa migration SQLite v9 ; il n’est pas encore installé sur le NAS au 24 octobre. Lint, types, build et 62 tests ciblés sur les livres passent sur ordinateur/mobile ; la recette avec de vraies sessions Shelfmark/Grimmory reste à effectuer.
 
 ## Production
 
