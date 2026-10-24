@@ -2,7 +2,7 @@
 
 ## Démarrage
 
-Node 24 (minimum 24.11), npm et le backend [Le Concierge](https://github.com/hloiseau/le-concierge) sont requis.
+Node 24 (minimum 24.15, conformément à Nuxt 4.6.2), npm et le backend [Le Concierge](https://github.com/hloiseau/le-concierge) sont requis.
 
 ```bash
 npm ci
@@ -44,6 +44,8 @@ Les exemples Compose, TrueNAS et Caddy communs sont dans [le guide de déploieme
 ## Dépendances — constat du 24 octobre 2026
 
 Nuxt passe à 4.6.2 ; Node reste en 24 et TypeScript en 5.9. Les Actions CI sont actualisées séparément du runtime applicatif. Lint, typecheck, build et les 330 tests navigateur ordinateur/mobile passent localement avec Node 24.
+
+Le contrôle répété après installation propre a aussi signalé `undici 8.12.1` et `serialize-javascript 7.1.2`. Le verrouillage est actualisé vers **8.12.3** et **7.1.4**, dans les plages déjà demandées par Nuxt et Rollup, sans nouvelle dépendance directe ni override. Ces versions dépassent les correctifs minimums annoncés dans les avis [undici](https://github.com/advisories/GHSA-xjj6-f33q-929c) et [serialize-javascript](https://github.com/advisories/GHSA-m5mm-p8h7-m29v).
 
 `npm audit` remonte encore sept entrées de gravité haute liées au même avis transitif `node-forge <=1.4.0` ([GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv)), propagé via listhen/Nitro/Nuxt. L’avis ne fournit pas de version corrigée à cette date. La suggestion automatique de retour à Nuxt 4.1.3 n’est pas appliquée : elle ne constitue pas une validation de compatibilité ni de correction de ce graphe.
 
