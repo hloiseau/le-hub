@@ -739,6 +739,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ouicheur/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Association personnelle Ouicheur */
+        get: operations["getOuicheurLink"];
+        put?: never;
+        /**
+         * Connexion personnelle Ouicheur
+         * @description Owner only; matching Origin required.
+         */
+        post: operations["linkOuicheurs"];
+        /**
+         * Association personnelle Ouicheur
+         * @description Owner only; matching Origin required.
+         */
+        delete: operations["unlinkOuicheurs"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -806,6 +831,7 @@ export interface components {
             discordChannelReminders: boolean;
             /** @description Plex authorization is encrypted at rest and survives browser expiry and API restart. Explicit logout, account deletion or Plex revocation stops it. Browser sessions still expire after 12 hours. */
             persistentPlexAuthorization?: boolean;
+            ouicheur?: boolean;
         };
         Media: {
             id: string;
@@ -3349,6 +3375,100 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getOuicheurLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    linkOuicheurs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    login?: string;
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
+            };
+            /** @description Error with stable code and French message */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unlinkOuicheurs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookLinkStatus"];
+                };
             };
             /** @description Error with stable code and French message */
             default: {
